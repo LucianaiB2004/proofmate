@@ -19,6 +19,7 @@ body {
 button, input, textarea { font: inherit; }
 
 button { cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
 
 .landing-shell {
   min-height: 100vh;
@@ -170,9 +171,20 @@ h1 {
 
 @media (max-width: 720px) {
   .cockpit { width: min(100% - 24px, 1500px); padding-top: 12px; }
-  .cockpit-header { align-items: start; }.cockpit-header .eyebrow { font-size: 9px; }
+  .cockpit-header { align-items: start; flex-direction: column; }.cockpit-header .eyebrow { font-size: 9px; }
+  .header-actions { width: 100%; justify-content: space-between; }.header-actions > button { white-space: nowrap; }
   .score-card { grid-template-columns: auto 1fr; padding: 18px; }.score-ring { width: 100px; }.score-ring strong { font-size: 32px; }.dimension-grid { grid-column: 1 / -1; width: 100%; }
   .cockpit-grid { grid-template-columns: 1fr; }.risk-panel { grid-column: auto; }
   .trace-panel ol { grid-template-columns: 1fr; }
   .runtime-grid { grid-template-columns: 1fr; }.runtime-grid article { border-right: 0; border-bottom: 1px solid var(--line); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+
+@media print {
+  body { color: #111; background: white; }
+  .header-actions, .repair-action { display: none; }
+  .claim-panel, .graph-panel, .risk-panel, .trace-panel, .runtime-panel, .score-card { break-inside: avoid; border-color: #ccc; background: white; color: #111; }
 }
