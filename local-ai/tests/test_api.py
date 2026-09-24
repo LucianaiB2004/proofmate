@@ -16,7 +16,7 @@ class MissingRuntime:
     def analyze(self, text):
         raise FileNotFoundError("model path not found")
 
-    def embed(self, text):
+    def fingerprint(self, text):
         raise FileNotFoundError("model path not found")
 
 
@@ -27,7 +27,7 @@ class ReadyRuntime(MissingRuntime):
     def analyze(self, text):
         return {"summary": text[:20], "signals": ["local-semantic-pass"]}
 
-    def embed(self, text):
+    def fingerprint(self, text):
         return [0.1, 0.2, 0.3]
 
 
@@ -54,10 +54,10 @@ def test_analyze_rejects_empty_text():
     assert response.status_code == 422
 
 
-def test_ready_runtime_returns_local_analysis_and_embedding():
+def test_ready_runtime_returns_local_analysis_and_fingerprint():
     client = TestClient(create_app(ReadyRuntime()))
     assert client.post("/v1/local/analyze", json={"text": "可验证的项目主张"}).json()["state"] == "service_ready"
-    assert client.post("/v1/local/embed", json={"text": "证据"}).json()["vector"] == [0.1, 0.2, 0.3]
+    assert client.post("/v1/local/fingerprint", json={"text": "证据"}).json()["fingerprint"] == [0.1, 0.2, 0.3]
 
 
 def test_inference_failure_is_distinct_from_missing_model():

@@ -11,7 +11,7 @@ export function RiskInspector({ claim, evidence, repaired, onRepair }: { claim: 
         {sources.map((item) => <article key={item.id}><header><span>{item.kind}</span><strong>{item.title}</strong></header><blockquote>{item.excerpt}</blockquote><footer>{item.source} · 可信度 {Math.round(item.confidence * 100)}%</footer></article>)}
       </div>
       <div className="repair-box"><span>建议修复</span><p>{claim.repair}</p></div>
-      <button className="repair-action" type="button" onClick={onRepair} disabled={repaired}>{repaired ? '30 天对照实验已入链' : '补充 30 天对照实验'}</button>
+      {claim.id === 'claim-energy' ? <button className="repair-action" type="button" onClick={onRepair} disabled={repaired}>{repaired ? '30 天对照实验已入链' : '补充 30 天对照实验'}</button> : <button className="repair-action" type="button" disabled>请按建议上传对应材料</button>}
     </section>
   );
 }

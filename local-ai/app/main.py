@@ -9,7 +9,7 @@ from .model_runtime import ModelRuntime
 class Runtime(Protocol):
     def status(self) -> dict[str, Any]: ...
     def analyze(self, text: str) -> dict[str, Any]: ...
-    def embed(self, text: str) -> list[float]: ...
+    def fingerprint(self, text: str) -> list[float]: ...
 
 
 class TextRequest(BaseModel):
@@ -44,10 +44,10 @@ def create_app(runtime: Runtime | None = None) -> FastAPI:
         except Exception as exc:
             raise HTTPException(status_code=503, detail={"state": "inference_failed", "message": str(exc)}) from exc
 
-    @app.post("/v1/local/embed")
-    def embed(request: TextRequest) -> dict[str, Any]:
+    @app.post("/v1/local/fingerprint")
+    def fingerprint(request: TextRequest) -> dict[str, Any]:
         try:
-            return {"state": "service_ready", "vector": model_runtime.embed(request.text)}
+            return {"state": "service_ready", "fingerprint": model_runtime.fingerprint(request.text)}
         except FileNotFoundError as exc:
             raise HTTPException(status_code=503, detail={"state": "model_unavailable", "message": str(exc)}) from exc
         except Exception as exc:

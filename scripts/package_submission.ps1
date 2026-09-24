@@ -1,6 +1,6 @@
 param(
     [switch]$VerifyOnly,
-    [string]$ParticipantName = "参赛者名"
+    [string]$ParticipantName = "作品包"
 )
 
 $ErrorActionPreference = "Stop"
@@ -77,10 +77,25 @@ Copy-Item -LiteralPath $coverPath -Destination $stageRoot
 
 $sourceTarget = Join-Path $stageRoot "作品展示\应用源码"
 New-Item -ItemType Directory -Path $sourceTarget -Force | Out-Null
-@("src", "server", "local-ai", "scripts") | ForEach-Object {
+@("src", "server", "scripts", "tests") | ForEach-Object {
     Copy-Item -LiteralPath (Join-Path $projectRoot $_) -Destination $sourceTarget -Recurse
 }
-@("package.json", "package-lock.json", "vite.config.ts", "tsconfig.json", "index.html", ".env.example", "README.md") | ForEach-Object {
+$localTarget = Join-Path $sourceTarget "local-ai"
+New-Item -ItemType Directory -Path $localTarget -Force | Out-Null
+@("app", "tests") | ForEach-Object {
+    Copy-Item -LiteralPath (Join-Path $projectRoot "local-ai\$_") -Destination $localTarget -Recurse
+}
+@("README.md", "pyproject.toml") | ForEach-Object {
+    Copy-Item -LiteralPath (Join-Path $projectRoot "local-ai\$_") -Destination $localTarget
+}
+$generatedDirectories = @(Get-ChildItem -LiteralPath $sourceTarget -Directory -Recurse | Where-Object { $_.Name -in @("__pycache__", ".pytest_cache") -or $_.Name -like "*.egg-info" })
+foreach ($directory in $generatedDirectories) {
+    if (-not $directory.FullName.StartsWith($sourceTarget, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "拒绝清理打包暂存区之外的目录: $($directory.FullName)"
+    }
+    Remove-Item -LiteralPath $directory.FullName -Recurse -Force
+}
+@("package.json", "package-lock.json", "vite.config.ts", "tsconfig.json", "index.html", ".env.example", "README.md", "playwright.config.ts") | ForEach-Object {
     Copy-Item -LiteralPath (Join-Path $projectRoot $_) -Destination $sourceTarget
 }
 

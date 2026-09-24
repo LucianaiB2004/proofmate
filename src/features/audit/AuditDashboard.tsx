@@ -16,6 +16,7 @@ export function AuditDashboard({ initialAudit }: { initialAudit: ProjectAudit })
   const counts = getRiskCounts(audit);
   const selected = useMemo(() => audit.claims.find((item) => item.id === selectedId) ?? audit.claims[0], [audit, selectedId]);
   const repaired = audit.evidence.some((item) => item.id === demoEvidence.id);
+  const isDemo = audit.id === 'campus-energy-audit';
   const repair = () => {
     setAudit((current) => linkEvidence(current, 'claim-energy', demoEvidence));
     setSelectedId('claim-energy');
@@ -25,7 +26,7 @@ export function AuditDashboard({ initialAudit }: { initialAudit: ProjectAudit })
     <main className="cockpit">
       <header className="cockpit-header">
         <div><p className="eyebrow">真源 PROOFMATE · 证据驾驶舱</p><h1>{audit.name}</h1></div>
-        <div className="header-actions"><button type="button" onClick={() => downloadMarkdownReport(audit)}>导出答辩摘要</button><div className="runtime-badge"><span />演示模式</div></div>
+        <div className="header-actions"><button type="button" onClick={() => downloadMarkdownReport(audit)}>导出答辩摘要</button><div className="runtime-badge"><span />{isDemo ? '演示模式' : '真实材料 · 本地抽取'}</div></div>
       </header>
       <nav className="risk-summary" aria-label="主张状态汇总">
         <span className="verified">{counts.verified} 已证实</span><span className="weak">{counts.weak} 待补证</span><span className="conflict">{counts.conflict} 有冲突</span><span className="missing">{counts.missing} 缺证据</span>
@@ -37,7 +38,7 @@ export function AuditDashboard({ initialAudit }: { initialAudit: ProjectAudit })
         <RiskInspector claim={selected} evidence={audit.evidence} repaired={repaired} onRepair={repair} />
       </div>
       <ProcessingTrace items={audit.trace} />
-      <RuntimePanel />
+      <RuntimePanel isDemo={isDemo} text={audit.evidence.map((item) => `${item.source}: ${item.excerpt}`).join('\n').slice(0, 12000)} />
     </main>
   );
 }

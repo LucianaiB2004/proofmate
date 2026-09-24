@@ -235,7 +235,7 @@ git commit -m "feat: build the evidence cockpit"
 
 **Interfaces:**
 - Consumes: `PROOFMATE_MODEL_PATH`, `PROOFMATE_DEVICE` environment variables.
-- Produces: `/health`, `/v1/local/model`, `/v1/local/analyze`, `/v1/local/embed`; `ModelRuntime.status()` and `ModelRuntime.analyze(text)`.
+- Produces: `/health`, `/v1/local/model`, `/v1/local/analyze`, `/v1/local/fingerprint`; `ModelRuntime.status()` and `ModelRuntime.analyze(text)`.
 
 - [ ] **Step 1: Write failing FastAPI tests**
 
@@ -374,7 +374,7 @@ git commit -m "feat: polish and verify the competition demo"
 
 **Interfaces:**
 - Consumes: verified product, screenshots, exact build/run commands.
-- Produces: official form copy, 1920×1080 cover, evidence pack, judge script, and `dist-submission/真源_参赛者名.zip`.
+- Produces: official form copy, 1920×1080 cover, evidence pack, judge script, and `dist-submission/真源_作品包.zip` (or a participant-name suffix supplied at packaging time).
 
 - [ ] **Step 1: Write the package verification script first**
 

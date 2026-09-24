@@ -50,8 +50,7 @@ class ModelRuntime:
         output = pipeline.generate(prompt, max_new_tokens=220)
         return {"summary": str(output), "signals": ["openvino-local-inference"]}
 
-    def embed(self, text: str) -> list[float]:
-        # A deterministic privacy-preserving fingerprint for local indexing.
-        # The generative OpenVINO model remains responsible for semantic analysis.
+    def fingerprint(self, text: str) -> list[float]:
+        # Deterministic content fingerprint for deduplication, not a semantic embedding.
         digest = hashlib.sha256(text.encode("utf-8")).digest()
         return [round((byte / 127.5) - 1, 6) for byte in digest]
