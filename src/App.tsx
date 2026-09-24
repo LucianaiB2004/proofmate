@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import type { ProjectAudit } from './domain/types';
 import { FileDropzone } from './features/onboarding/FileDropzone';
 import { ScanSequence } from './features/onboarding/ScanSequence';
+import { AuditDashboard } from './features/audit/AuditDashboard';
 
 export function App() {
   const [view, setView] = useState<'landing' | 'scan' | 'ready'>('landing');
@@ -14,7 +15,7 @@ export function App() {
   if (view === 'scan') return <ScanSequence onComplete={finishScan} />;
 
   if (view === 'ready' && audit) {
-    return <main className="ready-placeholder"><p className="eyebrow">证据建档完成</p><h1>{audit.name}</h1></main>;
+    return <AuditDashboard initialAudit={audit} />;
   }
 
   return (
