@@ -1,0 +1,1 @@
+"""ProofMate local AI service."""

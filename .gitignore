@@ -9,5 +9,6 @@ dist-submission/
 playwright-report/
 test-results/
 *.tsbuildinfo
+*.egg-info/
 __pycache__/
 .pytest_cache/
