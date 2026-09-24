@@ -5,6 +5,7 @@ export function RuntimePanel({ text, isDemo = false }: { text: string; isDemo?: 
   const [cloud, setCloud] = useState('百炼 API · 等待检测');
   const [busy, setBusy] = useState(false);
   const [localBusy, setLocalBusy] = useState(false);
+  const [insights, setInsights] = useState<string[]>([]);
   useEffect(() => {
     fetch('/api/local/status').then((response) => response.json()).then((result) => {
       setLocal(result.state === 'service_ready' ? `OpenVINO · ${result.model_state}` : 'OpenVINO · 服务未启动');
@@ -15,7 +16,10 @@ export function RuntimePanel({ text, isDemo = false }: { text: string; isDemo?: 
     try {
       const response = await fetch('/api/qwen/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
       const result = await response.json();
-      setCloud(result.state === 'provider_ready' ? `百炼 Qwen · 已核验 ${result.claims.length} 条主张` : result.state === 'provider_not_configured' ? '百炼 Qwen · 未配置 API Key' : `百炼 Qwen · ${result.state}`);
+      if (result.state === 'provider_ready') {
+        setCloud(`百炼 Qwen · 已核验 ${result.claims.length} 条主张`);
+        setInsights(result.claims.map((claim: { statement: string; risk: string }) => `${claim.statement}｜风险：${claim.risk}`));
+      } else setCloud(result.state === 'provider_not_configured' ? '百炼 Qwen · 未配置 API Key' : `百炼 Qwen · ${result.state}`);
     } catch { setCloud('百炼 Qwen · 服务连接失败'); } finally { setBusy(false); }
   };
   const analyzeLocal = async () => {
@@ -23,7 +27,10 @@ export function RuntimePanel({ text, isDemo = false }: { text: string; isDemo?: 
     try {
       const response = await fetch('/api/local/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
       const result = await response.json();
-      setLocal(result.state === 'service_ready' ? 'OpenVINO · 本地分析完成' : `OpenVINO · ${result.detail?.state ?? result.state}`);
+      if (result.state === 'service_ready') {
+        setLocal('OpenVINO · 本地分析完成');
+        setInsights([`端侧模型建议：${result.result?.summary ?? '分析完成，未返回摘要'}`]);
+      } else setLocal(`OpenVINO · ${result.detail?.state ?? result.state}`);
     } catch { setLocal('OpenVINO · 服务连接失败'); } finally { setLocalBusy(false); }
   };
   return (
@@ -34,6 +41,7 @@ export function RuntimePanel({ text, isDemo = false }: { text: string; isDemo?: 
         <article><span>端侧</span><strong>Qwen3-4B INT4</strong><p>{local}</p><button type="button" onClick={analyzeLocal} disabled={localBusy}>{localBusy ? '分析中…' : '使用端侧模型分析'}</button></article>
         <article><span>云端</span><strong>Qwen</strong><p>{cloud}</p><button type="button" onClick={analyze} disabled={busy}>{busy ? '核验中…' : '检测并分析当前材料'}</button></article>
       </div>
+      {insights.length > 0 && <div className="runtime-results" aria-live="polite"><strong>实时模型结果（待人工确认）</strong><ul>{insights.map((item) => <li key={item}>{item}</li>)}</ul></div>}
     </section>
   );
 }
