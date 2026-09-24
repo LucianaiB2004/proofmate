@@ -25,5 +25,5 @@ include = ["app*"]
 pythonpath = ["."]
 testpaths = ["tests"]
 filterwarnings = [
-  "ignore:Using .*starlette.testclient.*:DeprecationWarning"
+  "ignore::starlette.exceptions.StarletteDeprecationWarning"
 ]
