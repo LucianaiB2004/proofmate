@@ -69,4 +69,37 @@ h1 {
   background: rgba(255, 23, 68, .14);
 }
 
-.hero button:disabled { cursor: not-allowed; opacity: .62; }
+.hero-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.hero-actions span { color: var(--muted); font: 12px/1.4 var(--font-mono); }
+
+.dropzone {
+  width: min(560px, 100%);
+  margin-top: 32px;
+  padding: 18px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,.025);
+}
+.dropzone label { display: block; font-weight: 700; }
+.dropzone input { width: 100%; margin-top: 12px; color: var(--muted); }
+.dropzone p { margin: 10px 0 0; color: var(--muted); font-size: 12px; }
+
+.scan-shell { min-height: 100vh; width: min(1120px, calc(100% - 48px)); margin: 0 auto; padding: 72px 0; }
+.scan-header h1 { max-width: 780px; font-size: clamp(44px, 7vw, 82px); }
+.scan-header > p:last-child { color: var(--muted); }
+.scan-stages { list-style: none; padding: 0; margin: 64px 0 32px; border-top: 1px solid var(--line); }
+.scan-stages li { display: grid; grid-template-columns: 64px 1fr auto; gap: 24px; align-items: center; padding: 28px 0; border-bottom: 1px solid var(--line); opacity: .32; transition: opacity .3s ease; }
+.scan-stages li.is-active { opacity: 1; }
+.stage-index { color: var(--red); font: 700 14px var(--font-mono); }
+.scan-stages small { display: block; color: var(--green); font: 11px var(--font-mono); }
+.scan-stages strong { display: block; margin-top: 5px; font-size: 21px; }
+.scan-stages p { margin: 8px 0 0; color: var(--muted); }
+.stage-state { color: var(--muted); font: 12px var(--font-mono); }
+.scan-progress { height: 3px; overflow: hidden; background: var(--line); }
+.scan-progress span { display: block; height: 100%; background: var(--red); transition: width .4s ease; }
+.ready-placeholder { min-height: 100vh; display: grid; align-content: center; width: min(1120px, calc(100% - 48px)); margin: auto; }
+
+@media (max-width: 640px) {
+  .scan-stages li { grid-template-columns: 42px 1fr; }
+  .stage-state { grid-column: 2; }
+}
