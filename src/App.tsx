@@ -4,9 +4,10 @@ import { FileDropzone } from './features/onboarding/FileDropzone';
 import { ScanSequence } from './features/onboarding/ScanSequence';
 import { AuditDashboard } from './features/audit/AuditDashboard';
 import { demoCases } from './data/demoCases';
+import { CaseGallery } from './features/cases/CaseGallery';
 
 export function App() {
-  const [view, setView] = useState<'landing' | 'scan' | 'ready'>('landing');
+  const [view, setView] = useState<'landing' | 'cases' | 'scan' | 'ready'>('landing');
   const [audit, setAudit] = useState<ProjectAudit | null>(null);
   const [files, setFiles] = useState<File[] | null>(null);
   const [selectedDemo, setSelectedDemo] = useState(demoCases[0].project);
@@ -19,6 +20,10 @@ export function App() {
 
   if (view === 'ready' && audit) {
     return <AuditDashboard initialAudit={audit} />;
+  }
+
+  if (view === 'cases') {
+    return <CaseGallery cases={demoCases} onBack={() => setView('landing')} onSelect={(item) => { setFiles(null); setSelectedDemo(item.project); setView('scan'); }} />;
   }
 
   return (
@@ -34,6 +39,7 @@ export function App() {
           <p className="hero-copy">把论文、代码、数据和截图整理成可追溯的证据档案。AI 发现关系，人审阅并盖章确认。</p>
           <div className="hero-actions">
             <button type="button" onClick={() => { setFiles(null); setSelectedDemo(demoCases[0].project); setView('scan'); }}>体验示例项目</button>
+            <button className="secondary-action" type="button" onClick={() => setView('cases')}>查看案例展示</button>
             <span>无需登录 · 可直接审阅 · 结果不替代人工判断</span>
           </div>
         </div>
@@ -48,16 +54,6 @@ export function App() {
             <div><dt>处理</dt><dd>优先在浏览器与端侧完成</dd></div>
           </dl>
         </aside>
-      </section>
-      <section className="case-library" aria-labelledby="case-library-title">
-        <div className="case-library-heading"><div><p className="eyebrow">PUBLIC CASE FILES / 04</p><h2 id="case-library-title">从不同案例里，学会怎么找证据</h2></div><p>公开案例均为教学改编，不代表来源机构的原始结论。</p></div>
-        <div className="case-grid">
-          {demoCases.map((item, index) => <article className="case-card" key={item.id}>
-            <span className="case-index">0{index + 1}</span><small>{item.provenance}</small>
-            <h3>{item.shortName}</h3><p>{item.focus}</p>
-            <div><button type="button" onClick={() => { setFiles(null); setSelectedDemo(item.project); setView('scan'); }}>打开 {item.shortName}</button><a href={item.sourceUrl} target="_blank" rel="noreferrer">查看来源：{item.sourceLabel}</a></div>
-          </article>)}
-        </div>
       </section>
     </main>
   );

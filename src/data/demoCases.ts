@@ -1,5 +1,9 @@
 import type { ProjectAudit } from '../domain/types';
 import { demoProject } from './demoProject';
+import campusImage from '../assets/cases/campus-energy-dashboard.png';
+import challengerImage from '../assets/cases/nasa-o-ring-charts.jpg';
+import airQualityImage from '../assets/cases/uci-beijing-air-quality.jpg';
+import hiringImage from '../assets/cases/nist-ai-rmf-core.png';
 
 export interface DemoCase {
   id: string;
@@ -8,6 +12,9 @@ export interface DemoCase {
   provenance: string;
   sourceLabel: string;
   sourceUrl: string;
+  image: string;
+  imageAlt: string;
+  imageCaption: string;
   project: ProjectAudit;
 }
 
@@ -63,8 +70,8 @@ const hiring: ProjectAudit = {
 };
 
 export const demoCases: DemoCase[] = [
-  { id: 'campus', shortName: '校园节能项目', focus: '数字冲突 · 补证闭环', provenance: '项目原创样例', sourceLabel: 'ProofMate 原创材料', sourceUrl: 'https://github.com/LucianaiB2004/proofmate', project: demoProject },
-  { id: 'challenger', shortName: '挑战者号发射决策', focus: '工程警告 · 决策断链', provenance: '依据公开资料改编', sourceLabel: 'NASA Rogers Commission', sourceUrl: 'https://sma.nasa.gov/SignificantIncidents/assets/rogers_commission_report.pdf', project: challenger },
-  { id: 'air-quality', shortName: '北京空气质量预测', focus: '数据时效 · 缺失值 · 外推', provenance: '依据公开资料改编', sourceLabel: 'UCI Dataset 501 · CC BY 4.0', sourceUrl: 'https://archive.ics.uci.edu/dataset/501/beijing', project: airQuality },
-  { id: 'ai-hiring', shortName: 'AI 招聘系统审计', focus: '公平性 · 隐私 · 持续监测', provenance: '依据公开资料改编', sourceLabel: 'NIST AI RMF', sourceUrl: 'https://airc.nist.gov/airmf-resources/usecases/', project: hiring },
+  { id: 'campus', shortName: '校园节能项目', focus: '数字冲突 · 补证闭环', provenance: '项目原创样例', sourceLabel: 'ProofMate 原创材料', sourceUrl: 'https://github.com/LucianaiB2004/proofmate', image: campusImage, imageAlt: 'ProofMate 校园节能项目证据驾驶舱界面', imageCaption: '项目实机界面 · 证据驾驶舱', project: demoProject },
+  { id: 'challenger', shortName: '挑战者号发射决策', focus: '工程警告 · 决策断链', provenance: '依据公开资料改编', sourceLabel: 'NASA Rogers Commission', sourceUrl: 'https://www.nasa.gov/history/rogersrep/v1p89.htm', image: challengerImage, imageAlt: 'NASA 调查报告中的 O 型环工程风险图表', imageCaption: 'NASA 调查报告原图 · Boisjoly 工程风险图表', project: challenger },
+  { id: 'air-quality', shortName: '北京空气质量预测', focus: '数据时效 · 缺失值 · 外推', provenance: '依据公开资料改编', sourceLabel: 'UCI Dataset 501 · CC BY 4.0', sourceUrl: 'https://archive.ics.uci.edu/dataset/501/beijing', image: airQualityImage, imageAlt: 'UCI 北京多站点空气质量数据集官方页面', imageCaption: 'UCI 数据集官方页面截图 · 数据范围与缺失值说明', project: airQuality },
+  { id: 'ai-hiring', shortName: 'AI 招聘系统审计', focus: '公平性 · 隐私 · 持续监测', provenance: '依据公开资料改编', sourceLabel: 'NIST AI RMF', sourceUrl: 'https://airc.nist.gov/airmf-resources/airmf/5-sec-core/', image: hiringImage, imageAlt: 'NIST AI 风险管理框架核心结构图', imageCaption: 'NIST 官方框架图 · Govern / Map / Measure / Manage', project: hiring },
 ];
