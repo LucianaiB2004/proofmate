@@ -1,0 +1,18 @@
+{
+  "cold": {
+    "seconds": 16.37
+  },
+  "warm": {
+    "seconds": 6.48
+  },
+  "peak_rss_mb": 4280.3,
+  "output": "可验证主张：试点校园七天内的能耗下降了31%。  \n潜在风险：缺乏同周期对照数据，无法确认能耗下降是否真实或具有可推广性。  \n需要的证据：同周期内非试点校园的能耗数据。",
+  "signals": [
+    "openvino-local-inference"
+  ],
+  "model": "OpenVINO/Qwen3-4B-int4-ov",
+  "device": "CPU",
+  "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+  "python": "3.12.14",
+  "model_size_gb": 2.13
+}

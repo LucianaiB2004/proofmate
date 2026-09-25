@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { PDFDocument, StandardFonts } from 'pdf-lib';
 
 test('completes the evidence repair story and exports the report', async ({ page }) => {
   await page.goto('/');
@@ -25,4 +26,17 @@ test('keeps mobile navigation usable without page overflow', async ({ page }) =>
   expect(exportBox).not.toBeNull();
   expect(exportBox!.width).toBeGreaterThan(exportBox!.height * 2);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
+test('extracts real PDF text in the browser without substituting demo data', async ({ page }) => {
+  const pdf = await PDFDocument.create();
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  const sheet = pdf.addPage();
+  sheet.drawText('Pilot evidence shows energy reduction of 18 percent.', { x: 50, y: 700, font, size: 14 });
+  const bytes = await pdf.save();
+
+  await page.goto('/');
+  await page.locator('input[type=file]').setInputFiles({ name: 'real-evidence.pdf', mimeType: 'application/pdf', buffer: Buffer.from(bytes) });
+  await expect(page.getByRole('heading', { name: /我的材料 · real-evidence.pdf/ })).toBeVisible({ timeout: 7000 });
+  await expect(page.getByText(/Pilot evidence shows energy reduction of 18 percent/).first()).toBeVisible();
 });

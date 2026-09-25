@@ -1,12 +1,14 @@
 import { calculateAuditScore } from '../../domain/audit';
 import type { Claim, EvidenceItem, ProjectAudit } from '../../domain/types';
+import { extractFileText } from './extractFileText';
 
-const textExtensions = new Set(['md', 'txt', 'csv', 'json']);
 const excerpt = (value: string) => value.replace(/\s+/g, ' ').trim().slice(0, 180);
 
 export async function buildImportedAudit(files: File[]): Promise<ProjectAudit> {
-  const readable = files.filter((file) => textExtensions.has(file.name.split('.').pop()?.toLowerCase() ?? ''));
-  const contents = await Promise.all(readable.map(async (file) => ({ file, text: await file.text() })));
+  const contents = (await Promise.all(files.map(async (file) => {
+    try { return { file, text: await extractFileText(file) }; } catch { return { file, text: '' }; }
+  }))).filter((item) => item.text.trim());
+  const readable = contents.map((item) => item.file);
   const evidence: EvidenceItem[] = files.map((file, index) => {
     const text = contents.find((item) => item.file === file)?.text ?? '';
     return {

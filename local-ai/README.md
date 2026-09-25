@@ -13,10 +13,11 @@ python -m uvicorn app.main:app --app-dir local-ai --host 127.0.0.1 --port 8787
 
 ## 可选模型
 
-模型体积为数 GB，下载不会自动发生。先安装 `optimum-intel` 与 `openvino-genai`，再显式运行：
+模型体积为数 GB，下载不会自动发生。安装 OpenVINO GenAI 后，显式下载 OpenVINO 官方预转换的 `OpenVINO/Qwen3-4B-int4-ov`：
 
 ```powershell
-python scripts/download_openvino_model.py --accept-download
+py -3.12 -m pip install -e "local-ai[dev,openvino]"
+py -3.12 scripts/download_openvino_model.py --accept-download
 ```
 
 可用 `PROOFMATE_MODEL_PATH` 和 `PROOFMATE_DEVICE` 覆盖默认位置与设备。当前电脑为 AMD CPU，因此默认使用 OpenVINO CPU 后端；不要选择 Intel NPU。

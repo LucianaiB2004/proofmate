@@ -10,4 +10,8 @@ await page.screenshot({ path: 'submission/作品展示/界面截图-证据驾驶
 await page.getByRole('button', { name: '补充 30 天对照实验' }).click();
 await page.getByLabel('证据健康度 85 分').waitFor({ state: 'visible' });
 await page.screenshot({ path: 'submission/作品展示/界面截图-补证完成.png', fullPage: true });
+await page.getByRole('button', { name: '使用端侧模型分析' }).click();
+await page.getByText('OpenVINO · 本地分析完成').waitFor({ state: 'visible', timeout: 60000 });
+await page.getByText('实时模型结果（待人工确认）').waitFor({ state: 'visible' });
+await page.screenshot({ path: 'submission/作品展示/界面截图-OpenVINO实机.png', fullPage: true });
 await browser.close();

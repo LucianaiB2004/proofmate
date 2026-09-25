@@ -1,15 +1,19 @@
 from __future__ import annotations
 
 import argparse
-import shutil
-import subprocess
 import sys
 from pathlib import Path
+from typing import Callable
 
 
-MODEL_ID = "Qwen/Qwen3-4B"
+MODEL_ID = "OpenVINO/Qwen3-4B-int4-ov"
 OUTPUT = Path("local-ai/models/qwen3-4b-int4")
 ESTIMATED_GB = 4.5
+
+
+def download_model(output: Path, snapshot_download: Callable[..., object]) -> None:
+    output.parent.mkdir(parents=True, exist_ok=True)
+    snapshot_download(MODEL_ID, local_dir=output)
 
 
 def main() -> int:
@@ -21,18 +25,14 @@ def main() -> int:
     if not args.accept_download:
         print("No files changed. Re-run with --accept-download after reviewing the size.")
         return 2
-    if shutil.which("optimum-cli") is None:
-        print('Missing optimum-cli. Install with: python -m pip install "optimum-intel[openvino]" openvino-genai', file=sys.stderr)
+    try:
+        from huggingface_hub import snapshot_download
+    except ImportError:
+        print('Missing huggingface_hub. Install with: python -m pip install openvino-genai huggingface-hub', file=sys.stderr)
         return 3
 
-    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    command = [
-        "optimum-cli", "export", "openvino", "--model", MODEL_ID,
-        "--task", "text-generation-with-past", "--weight-format", "int4", str(OUTPUT),
-    ]
-    print("Running:", " ".join(command))
-    subprocess.run(command, check=True)
-    print("OpenVINO model export complete.")
+    download_model(OUTPUT, snapshot_download)
+    print("Official OpenVINO INT4 model download complete.")
     return 0
 
 

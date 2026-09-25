@@ -18,7 +18,9 @@ $requiredFiles = @(
     "评委问答.md",
     "AI实践佐证\README.md",
     "AI实践佐证\prompts.md",
+    "AI实践佐证\OpenVINO实机测试.md",
     "作品展示\README.md",
+    "作品展示\界面截图-OpenVINO实机.png",
     "封面.png"
 )
 
@@ -85,7 +87,7 @@ New-Item -ItemType Directory -Path $localTarget -Force | Out-Null
 @("app", "tests") | ForEach-Object {
     Copy-Item -LiteralPath (Join-Path $projectRoot "local-ai\$_") -Destination $localTarget -Recurse
 }
-@("README.md", "pyproject.toml") | ForEach-Object {
+@("README.md", "pyproject.toml", "benchmark-result.json") | ForEach-Object {
     Copy-Item -LiteralPath (Join-Path $projectRoot "local-ai\$_") -Destination $localTarget
 }
 $generatedDirectories = @(Get-ChildItem -LiteralPath $sourceTarget -Directory -Recurse | Where-Object { $_.Name -in @("__pycache__", ".pytest_cache") -or $_.Name -like "*.egg-info" })

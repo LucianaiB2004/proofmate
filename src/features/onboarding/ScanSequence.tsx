@@ -13,7 +13,7 @@ export function ScanSequence({ files, onComplete }: { files?: File[] | null; onC
   const [activeStage, setActiveStage] = useState(0);
   const stages = files?.length ? [
     { label: '端侧材料清点', detail: `已接收 ${files.length} 份真实材料，原始文件不离开浏览器。`, mode: 'DEVICE' },
-    { label: '本地内容抽取', detail: '读取文本类材料；PDF 与图片仅清点，不伪造识别结果。', mode: 'PRIVATE' },
+    { label: '本地内容抽取', detail: '读取文本、CSV、JSON 与 PDF 正文；图片仅清点，不伪造 OCR 结果。', mode: 'PRIVATE' },
     { label: '模型核验待命', detail: '先生成本地候选；进入驾驶舱后可检测 Qwen / OpenVINO。', mode: 'READY' },
   ] : demoStages;
 

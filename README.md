@@ -1,6 +1,6 @@
 # 真源 ProofMate
 
-天猫 AI 黑客松高校挑战赛作品：基于 Qwen × OpenVINO 的端云协同可信证据系统。
+天猫 AI 黑客松高校挑战赛作品：基于 Qwen × OpenVINO 的端云协同可信证据系统。百炼 `qwen-plus` 与 OpenVINO Qwen3-4B INT4 均已完成真实联调。
 
 ## 快速开始
 
@@ -25,6 +25,7 @@ pwsh -File scripts/package_submission.ps1 -VerifyOnly
 
 - 百炼 Qwen：复制 `.env.example` 为 `.env.local`，填写 `DASHSCOPE_API_KEY`。
 - OpenVINO：参见 [`local-ai/README.md`](local-ai/README.md)，推荐 Qwen3-4B INT4、CPU 设备。
+- PDF：正文在浏览器内由 PDF.js 解析，原始文件无需上传。
 
 ## 项目结构
 

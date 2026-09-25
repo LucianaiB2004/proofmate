@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import re
 from pathlib import Path
 from typing import Any
 
@@ -45,10 +46,12 @@ class ModelRuntime:
         pipeline = self._load()
         prompt = (
             "你是真源 ProofMate 的端侧证据分析器。只依据给定文本，"
-            "提取一条可验证主张、潜在风险和需要的证据，使用简洁中文回答。\n\n材料：" + text
+            "提取一条可验证主张、潜在风险和需要的证据，使用简洁中文回答。"
+            "不要展示推理过程。 /no_think\n\n材料：" + text
         )
-        output = pipeline.generate(prompt, max_new_tokens=220)
-        return {"summary": str(output), "signals": ["openvino-local-inference"]}
+        output = pipeline.generate(prompt, max_new_tokens=160, do_sample=False)
+        summary = re.sub(r"<think>.*?</think>", "", str(output), flags=re.DOTALL).strip()
+        return {"summary": summary, "signals": ["openvino-local-inference"]}
 
     def fingerprint(self, text: str) -> list[float]:
         # Deterministic content fingerprint for deduplication, not a semantic embedding.
