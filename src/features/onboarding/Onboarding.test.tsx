@@ -9,7 +9,9 @@ it('replays the sample scan and returns the prepared audit', async () => {
   const onComplete = vi.fn();
   render(<ScanSequence onComplete={onComplete} />);
 
-  expect(screen.getByText('端侧材料清点')).toBeVisible();
+  expect(screen.getByText('材料清点仪')).toBeVisible();
+  expect(screen.getByText('隐私检查仪')).toBeVisible();
+  expect(screen.getByText('模型核验仪')).toBeVisible();
   await act(async () => vi.advanceTimersByTimeAsync(2400));
   expect(onComplete).toHaveBeenCalledWith(expect.objectContaining({ name: '校园节能 AI 调度系统' }));
   vi.useRealTimers();
@@ -20,6 +22,18 @@ it('starts the sample scan from the landing page', async () => {
   render(<App />);
   await userEvent.click(screen.getByRole('button', { name: '体验示例项目' }));
   expect(screen.getByRole('heading', { name: '正在重建项目的证据链' })).toBeVisible();
+});
+
+it('labels imported material as a real local review', () => {
+  vi.useFakeTimers();
+  render(<ScanSequence files={[new File(['evidence'], '真实材料.txt')]} onComplete={vi.fn()} />);
+
+  expect(screen.getByText('真实材料 · LOCAL FIRST')).toBeVisible();
+  expect(screen.getByText('材料清点仪')).toBeVisible();
+  expect(screen.getByText('隐私检查仪')).toBeVisible();
+  expect(screen.getByText('模型核验仪')).toBeVisible();
+  expect(screen.getByText(/已接收 1 份真实材料/)).toBeVisible();
+  vi.useRealTimers();
 });
 
 it('keeps a long imported filename available to people and layout checks', async () => {

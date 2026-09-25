@@ -239,3 +239,27 @@ button:focus-visible, input:focus-visible { outline: 3px double var(--audit-red)
   .archive-intro h1 { font-size: clamp(42px, 14vw, 64px); overflow-wrap: anywhere; }
   .archive-intake { padding: 38px 28px; }.hero-actions { align-items: stretch; flex-direction: column; }.hero-actions button { width: 100%; }
 }
+
+/* Three-stage desktop instruments */
+.scan-shell { width: min(1080px, calc(100% - 48px)); color: var(--ink); }
+.scan-header { position: relative; padding: 28px; border: 2px solid var(--ink); background: var(--paper-raised); box-shadow: var(--shadow-paper); }
+.scan-header::after { content: 'SCAN LOG / 03'; position: absolute; top: 0; right: 0; padding: 7px 10px; color: var(--paper-raised); background: var(--ink); font: 700 9px var(--font-mono); }
+.scan-stages { display: grid; gap: 12px; margin: 24px 0 18px; border: 0; }
+.scan-stages li { position: relative; grid-template-columns: 54px minmax(0,1fr) 76px; gap: 16px; padding: 14px; border: 2px solid var(--ink); opacity: .48; background: #dad4c8; transition: opacity .2s ease, transform .2s ease; }
+.scan-stages li.is-active { opacity: 1; }.scan-stages li[aria-current='step'] { transform: translateX(6px); box-shadow: -6px 0 0 var(--audit-red); }
+.instrument-readout { position: relative; min-width: 0; overflow: hidden; padding: 13px 15px; color: #e9f5ed; background: var(--ink-soft); border: 2px inset #575750; }
+.instrument-readout small { display: flex; align-items: center; gap: 7px; color: #8bd7c0; }.instrument-readout strong { color: #f4f0e8; }.instrument-readout p { color: #b9b9ad; overflow-wrap: anywhere; }
+.status-light { width: 8px; height: 8px; background: var(--instrument-green); box-shadow: 0 0 0 2px rgba(20,125,104,.25); }
+.scanner-line { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: #61e0bd; animation: scanner-pulse 1.1s steps(5,end) infinite; }
+.stage-state { color: var(--ink); font-weight: 800; }.scan-progress { height: 8px; border: 1px solid var(--ink); background: #d0c9bb; }.scan-progress span { background: var(--audit-red); }
+@keyframes scanner-pulse { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+@media (max-width: 640px) {
+  .scan-shell { width: min(100% - 24px, 1080px); padding: 28px 0; }
+  .scan-header { padding: 48px 20px 24px; }.scan-header h1 { font-size: clamp(38px, 13vw, 58px); }
+  .scan-stages li { grid-template-columns: 34px minmax(0,1fr); gap: 10px; }.stage-state { grid-column: 2; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scanner-line, .audit-stamp.is-new { animation: none !important; }
+}

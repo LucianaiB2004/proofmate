@@ -4,17 +4,17 @@ import type { ProjectAudit } from '../../domain/types';
 import { buildImportedAudit } from './buildImportedAudit';
 
 const demoStages = [
-  { label: '端侧材料清点', detail: '识别 12 份项目材料，原始文件不离开设备。', mode: 'DEVICE' },
-  { label: '隐私边界检查', detail: '发现 2 处潜在个人信息，已在本地标记。', mode: 'PRIVATE' },
-  { label: 'Qwen 证据映射', detail: '样例回放正在构建 6 条主张与 10 个证据节点。', mode: 'CLOUD' },
+  { label: '材料清点仪', detail: '样例回放：识别 12 份项目材料，原始文件不离开设备。', mode: 'DEVICE' },
+  { label: '隐私检查仪', detail: '样例回放：发现 2 处潜在个人信息，已在本地标记。', mode: 'PRIVATE' },
+  { label: '模型核验仪', detail: '样例回放：构建 6 条主张与 10 个证据节点。', mode: 'CLOUD' },
 ];
 
 export function ScanSequence({ files, onComplete }: { files?: File[] | null; onComplete: (audit: ProjectAudit) => void }) {
   const [activeStage, setActiveStage] = useState(0);
   const stages = files?.length ? [
-    { label: '端侧材料清点', detail: `已接收 ${files.length} 份真实材料，原始文件不离开浏览器。`, mode: 'DEVICE' },
-    { label: '本地内容抽取', detail: '读取文本、CSV、JSON 与 PDF 正文；图片仅清点，不伪造 OCR 结果。', mode: 'PRIVATE' },
-    { label: '模型核验待命', detail: '先生成本地候选；进入驾驶舱后可检测 Qwen / OpenVINO。', mode: 'READY' },
+    { label: '材料清点仪', detail: `已接收 ${files.length} 份真实材料，原始文件不离开浏览器。`, mode: 'DEVICE' },
+    { label: '隐私检查仪', detail: '读取文本、CSV、JSON 与 PDF 正文；图片仅清点，不伪造 OCR 结果。', mode: 'PRIVATE' },
+    { label: '模型核验仪', detail: '先生成本地候选；进入档案桌后可检测 Qwen / OpenVINO。', mode: 'READY' },
   ] : demoStages;
 
   useEffect(() => {
@@ -35,12 +35,13 @@ export function ScanSequence({ files, onComplete }: { files?: File[] | null; onC
       </header>
       <ol className="scan-stages">
         {stages.map((stage, index) => (
-          <li key={stage.label} className={index <= activeStage ? 'is-active' : ''}>
+          <li key={stage.label} className={index <= activeStage ? 'is-active' : ''} aria-current={index === activeStage ? 'step' : undefined}>
             <span className="stage-index">0{index + 1}</span>
-            <div>
-              <small>{stage.mode}</small>
+            <div className="instrument-readout">
+              <small><i className="status-light" aria-hidden="true" />{stage.mode}</small>
               <strong>{stage.label}</strong>
               <p>{stage.detail}</p>
+              {index === activeStage && <span className="scanner-line" aria-hidden="true" />}
             </div>
             <span className="stage-state">{index < activeStage ? '完成' : index === activeStage ? '处理中' : '等待'}</span>
           </li>
