@@ -9,6 +9,29 @@ $submissionRoot = Join-Path $projectRoot "submission"
 $outputRoot = Join-Path $projectRoot "dist-submission"
 $stageRoot = Join-Path $outputRoot "stage"
 $coverPath = Join-Path $submissionRoot "封面.png"
+$zipPath = Join-Path $outputRoot "真源_$ParticipantName.zip"
+
+function Test-SubmissionZip([string]$Path) {
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        throw "提交包不存在: $Path"
+    }
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $archive = [System.IO.Compression.ZipFile]::OpenRead($Path)
+    try {
+        $names = @($archive.Entries | ForEach-Object { $_.FullName.Replace("\", "/") })
+        if ($names -notcontains "作品展示/应用源码/dist/index.html") {
+            throw "提交包缺少生产构建: 作品展示/应用源码/dist/index.html"
+        }
+        $forbidden = @($names | Where-Object {
+            $_ -match '(^|/)(\.env($|\.)|models?(/|$)|\.venv(/|$)|node_modules(/|$)|__pycache__|\.pytest_cache|test-results|playwright-report|benchmark-result\.json$)'
+        })
+        if ($forbidden.Count -gt 0) {
+            throw "提交包包含禁止条目: $($forbidden -join ', ')"
+        }
+    } finally {
+        $archive.Dispose()
+    }
+}
 
 $requiredFiles = @(
     "体验说明.md",
@@ -58,6 +81,7 @@ if ($errors.Count -gt 0) {
 }
 
 if ($VerifyOnly) {
+    Test-SubmissionZip $zipPath
     Write-Output "SUBMISSION_VERIFY_OK"
     exit 0
 }
@@ -79,7 +103,7 @@ Copy-Item -LiteralPath $coverPath -Destination $stageRoot
 
 $sourceTarget = Join-Path $stageRoot "作品展示\应用源码"
 New-Item -ItemType Directory -Path $sourceTarget -Force | Out-Null
-@("src", "server", "scripts", "tests") | ForEach-Object {
+@("src", "server", "scripts", "tests", "dist") | ForEach-Object {
     Copy-Item -LiteralPath (Join-Path $projectRoot $_) -Destination $sourceTarget -Recurse
 }
 $localTarget = Join-Path $sourceTarget "local-ai"
@@ -87,7 +111,7 @@ New-Item -ItemType Directory -Path $localTarget -Force | Out-Null
 @("app", "tests") | ForEach-Object {
     Copy-Item -LiteralPath (Join-Path $projectRoot "local-ai\$_") -Destination $localTarget -Recurse
 }
-@("README.md", "pyproject.toml", "benchmark-result.json") | ForEach-Object {
+@("README.md", "pyproject.toml") | ForEach-Object {
     Copy-Item -LiteralPath (Join-Path $projectRoot "local-ai\$_") -Destination $localTarget
 }
 $generatedDirectories = @(Get-ChildItem -LiteralPath $sourceTarget -Directory -Recurse | Where-Object { $_.Name -in @("__pycache__", ".pytest_cache") -or $_.Name -like "*.egg-info" })
@@ -97,14 +121,14 @@ foreach ($directory in $generatedDirectories) {
     }
     Remove-Item -LiteralPath $directory.FullName -Recurse -Force
 }
-@("package.json", "package-lock.json", "vite.config.ts", "tsconfig.json", "index.html", ".env.example", "README.md", "playwright.config.ts") | ForEach-Object {
+@("package.json", "package-lock.json", "vite.config.ts", "tsconfig.json", "index.html", "README.md", "playwright.config.ts") | ForEach-Object {
     Copy-Item -LiteralPath (Join-Path $projectRoot $_) -Destination $sourceTarget
 }
 
-$zipPath = Join-Path $outputRoot "真源_$ParticipantName.zip"
 if (Test-Path -LiteralPath $zipPath) { Remove-Item -LiteralPath $zipPath -Force }
 Compress-Archive -Path (Join-Path $stageRoot "*") -DestinationPath $zipPath -CompressionLevel Optimal
 Remove-Item -LiteralPath $stageRoot -Recurse -Force
+Test-SubmissionZip $zipPath
 
 $sizeMb = [math]::Round((Get-Item -LiteralPath $zipPath).Length / 1MB, 2)
 Write-Output "SUBMISSION_PACKAGE_OK: $zipPath ($sizeMb MB)"
