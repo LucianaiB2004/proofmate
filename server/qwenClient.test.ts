@@ -19,5 +19,13 @@ describe('Qwen server adapter', () => {
     const result = await analyzeWithQwen({ text: 'report' }, fetchImpl, { apiKey: 'server-only' });
     expect(result).toEqual({ state: 'provider_ready', claims: [{ statement: '节能 31%', risk: '样本周期短' }] });
     expect(JSON.stringify(result)).not.toContain('server-only');
+    expect((fetchImpl.mock.calls[0][1] as RequestInit).body).toContain('json');
+  });
+
+  it('preserves the provider error code without exposing credentials', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: { code: 'invalid_parameter', message: 'bad request' } }), { status: 400 })) as typeof fetch;
+    await expect(analyzeWithQwen({ text: 'report' }, fetchImpl, { apiKey: 'server-only' })).resolves.toEqual({
+      state: 'provider_error', message: 'Qwen HTTP 400: invalid_parameter · bad request',
+    });
   });
 });

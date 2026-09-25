@@ -38,12 +38,16 @@ export async function analyzeWithQwen(
         model: options.model ?? process.env.QWEN_MODEL ?? 'qwen-plus',
         response_format: { type: 'json_object' },
         messages: [
-          { role: 'system', content: '你是真源 ProofMate 的证据审计器。只依据输入材料提取可验证主张和对应风险，以 {"claims":[{"statement":"...","risk":"..."}]} 返回。' },
+          { role: 'system', content: '你是真源 ProofMate 的证据审计器。只依据输入材料提取可验证主张和对应风险，以 json 对象 {"claims":[{"statement":"...","risk":"..."}]} 返回。' },
           { role: 'user', content: input.text },
         ],
       }),
     });
-    if (!response.ok) return { state: 'provider_error', message: `Qwen HTTP ${response.status}` };
+    if (!response.ok) {
+      const detail = await response.json().catch(() => null) as { error?: { code?: string; message?: string } } | null;
+      const safeDetail = [detail?.error?.code, detail?.error?.message].filter(Boolean).join(' · ');
+      return { state: 'provider_error', message: `Qwen HTTP ${response.status}${safeDetail ? `: ${safeDetail}` : ''}` };
+    }
     const payload = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
     const content = payload.choices?.[0]?.message?.content;
     if (!content) return { state: 'provider_error', message: 'Qwen 返回内容为空' };
