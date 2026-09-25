@@ -17,6 +17,7 @@ class FakeRuntime:
 def test_benchmark_reports_cold_warm_latency_memory_and_output():
     report = MODULE.run_benchmark(FakeRuntime(), "证据材料", sample_rss=lambda: 321.5)
     assert report["cold"]["seconds"] >= 0
-    assert report["warm"]["seconds"] >= 0
+    assert report["warm"]["median_seconds"] >= 0
+    assert len(report["warm"]["samples_seconds"]) == 3
     assert report["peak_rss_mb"] == 321.5
     assert report["output"] == "已分析：证据材料"

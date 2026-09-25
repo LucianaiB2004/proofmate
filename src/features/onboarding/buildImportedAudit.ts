@@ -4,18 +4,21 @@ import { extractFileText } from './extractFileText';
 
 const excerpt = (value: string) => value.replace(/\s+/g, ' ').trim().slice(0, 180);
 
-export async function buildImportedAudit(files: File[]): Promise<ProjectAudit> {
-  const contents = (await Promise.all(files.map(async (file) => {
-    try { return { file, text: await extractFileText(file) }; } catch { return { file, text: '' }; }
-  }))).filter((item) => item.text.trim());
+export async function buildImportedAudit(files: File[], extractor = extractFileText): Promise<ProjectAudit> {
+  const parsed = await Promise.all(files.map(async (file) => {
+    try { return { file, text: await extractor(file), error: '' }; }
+    catch (error) { return { file, text: '', error: error instanceof Error ? error.message : '未知错误' }; }
+  }));
+  const contents = parsed.filter((item) => item.text.trim());
   const readable = contents.map((item) => item.file);
   const evidence: EvidenceItem[] = files.map((file, index) => {
-    const text = contents.find((item) => item.file === file)?.text ?? '';
+    const result = parsed.find((item) => item.file === file);
+    const text = result?.text ?? '';
     return {
       id: `import-evidence-${index}`,
       title: file.name,
       kind: file.name.match(/\.(csv|json)$/i) ? 'data' : file.name.match(/\.(png|jpe?g|webp)$/i) ? 'image' : 'document',
-      excerpt: text ? excerpt(text) : '浏览器已完成文件清点；该格式需启用 Qwen 或端侧模型后解析内容。',
+      excerpt: text ? excerpt(text) : result?.error ? `PDF 解析失败：${result.error}。请检查加密或损坏状态后重试。` : '浏览器已完成文件清点；图片需启用 OCR 后解析内容。',
       source: file.name,
       confidence: text ? 0.72 : 0.35,
     };
@@ -38,7 +41,7 @@ export async function buildImportedAudit(files: File[]): Promise<ProjectAudit> {
     score: calculateAuditScore(dimensions), claims, evidence,
     trace: [
       { stage: 'device', label: '真实文件清点', detail: `已在浏览器接收 ${files.length} 份材料。` },
-      { stage: 'device', label: '本地文本抽取', detail: `${readable.length} 份文本已读取；${files.length - readable.length} 份二进制材料未在浏览器解读。` },
+      { stage: 'device', label: '本地文本抽取', detail: `${readable.length} 份材料已读取；${parsed.filter((item) => item.error).map((item) => `${item.file.name} 解析失败：${item.error}`).join('；') || `${files.length - readable.length} 份图片未执行 OCR`}。` },
       { stage: 'cloud', label: '模型核验待命', detail: '当前仅展示真实本地抽取结果；配置运行时后可继续模型分析。' },
     ],
   };

@@ -17,9 +17,9 @@ def test_uses_official_preconverted_openvino_model():
 def test_download_delegates_to_snapshot_download(tmp_path):
     calls = []
 
-    def fake_snapshot(model_id, local_dir):
-        calls.append((model_id, local_dir))
+    def fake_snapshot(model_id, local_dir, revision):
+        calls.append((model_id, local_dir, revision))
 
     target = tmp_path / "model"
     MODULE.download_model(target, fake_snapshot)
-    assert calls == [("OpenVINO/Qwen3-4B-int4-ov", target)]
+    assert calls == [("OpenVINO/Qwen3-4B-int4-ov", target, MODULE.MODEL_REVISION)]

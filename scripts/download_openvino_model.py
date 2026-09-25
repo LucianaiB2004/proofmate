@@ -7,13 +7,14 @@ from typing import Callable
 
 
 MODEL_ID = "OpenVINO/Qwen3-4B-int4-ov"
+MODEL_REVISION = "b467368d16b75df14055562fe927ae8e1f15f7ef"
 OUTPUT = Path("local-ai/models/qwen3-4b-int4")
 ESTIMATED_GB = 4.5
 
 
 def download_model(output: Path, snapshot_download: Callable[..., object]) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
-    snapshot_download(MODEL_ID, local_dir=output)
+    snapshot_download(MODEL_ID, local_dir=output, revision=MODEL_REVISION)
 
 
 def main() -> int:

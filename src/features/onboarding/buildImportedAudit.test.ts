@@ -12,5 +12,12 @@ it('builds an audit from the actual selected text file', async () => {
 it('labels binary-only input without pretending to read its contents', async () => {
   const audit = await buildImportedAudit([new File(['binary'], 'photo.png', { type: 'image/png' })]);
   expect(audit.claims[0].statement).toContain('待模型解析');
-  expect(audit.trace.some((item) => item.detail.includes('未在浏览器解读'))).toBe(true);
+  expect(audit.trace.some((item) => item.detail.includes('未执行 OCR'))).toBe(true);
+});
+
+it('preserves a PDF extraction error instead of calling it model work', async () => {
+  const file = new File(['broken'], 'encrypted.pdf', { type: 'application/pdf' });
+  const audit = await buildImportedAudit([file], async () => { throw new Error('文档已加密'); });
+  expect(audit.evidence[0].excerpt).toContain('PDF 解析失败：文档已加密');
+  expect(audit.trace.some((item) => item.detail.includes('encrypted.pdf'))).toBe(true);
 });

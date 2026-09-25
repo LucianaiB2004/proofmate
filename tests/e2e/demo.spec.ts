@@ -40,3 +40,12 @@ test('extracts real PDF text in the browser without substituting demo data', asy
   await expect(page.getByRole('heading', { name: /我的材料 · real-evidence.pdf/ })).toBeVisible({ timeout: 7000 });
   await expect(page.getByText(/Pilot evidence shows energy reduction of 18 percent/).first()).toBeVisible();
 });
+
+test('carries the local AI result through the Vite proxy into the product UI', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '体验示例项目' }).click();
+  await expect(page.getByLabel('证据健康度 68 分')).toBeVisible({ timeout: 7000 });
+  await expect(page.getByText('OpenVINO · service_ready')).toBeVisible();
+  await page.getByRole('button', { name: '使用端侧模型分析' }).click();
+  await expect(page.getByText(/代理链路返回的端侧证据结论/)).toBeVisible();
+});

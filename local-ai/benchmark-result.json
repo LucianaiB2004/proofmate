@@ -1,11 +1,16 @@
 {
   "cold": {
-    "seconds": 16.37
+    "seconds": 18.14
   },
   "warm": {
-    "seconds": 6.48
+    "median_seconds": 8.75,
+    "samples_seconds": [
+      8.75,
+      8.43,
+      9.09
+    ]
   },
-  "peak_rss_mb": 4280.3,
+  "peak_rss_mb": 4747.6,
   "output": "可验证主张：试点校园七天内的能耗下降了31%。  \n潜在风险：缺乏同周期对照数据，无法确认能耗下降是否真实或具有可推广性。  \n需要的证据：同周期内非试点校园的能耗数据。",
   "signals": [
     "openvino-local-inference"
@@ -14,5 +19,15 @@
   "device": "CPU",
   "processor": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
   "python": "3.12.14",
+  "measured_at_utc": "2026-09-25T08:13:16.571008+00:00",
+  "model_revision": "b467368d16b75df14055562fe927ae8e1f15f7ef",
+  "versions": {
+    "openvino": "2026.4.0",
+    "openvino-genai": "2026.4.0.0",
+    "openvino-tokenizers": "2026.4.0.0",
+    "psutil": "7.2.2"
+  },
+  "input": "七天试点数据显示校园能耗下降31%，但没有同周期对照数据。",
+  "output_characters": 85,
   "model_size_gb": 2.13
 }

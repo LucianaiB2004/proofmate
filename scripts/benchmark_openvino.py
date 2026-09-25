@@ -1,17 +1,20 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
+from importlib.metadata import version
 import json
 import os
 import platform
 import sys
 import threading
 import time
+from statistics import median
 from pathlib import Path
 from typing import Callable
 
 
-def run_benchmark(runtime, text: str, sample_rss: Callable[[], float]) -> dict:
+def run_benchmark(runtime, text: str, sample_rss: Callable[[], float], warm_runs: int = 3) -> dict:
     samples = [sample_rss()]
     stop = threading.Event()
 
@@ -25,16 +28,18 @@ def run_benchmark(runtime, text: str, sample_rss: Callable[[], float]) -> dict:
         started = time.perf_counter()
         cold = runtime.analyze(text)
         cold_seconds = time.perf_counter() - started
-        started = time.perf_counter()
-        warm = runtime.analyze(text)
-        warm_seconds = time.perf_counter() - started
+        warm_samples = []
+        for _ in range(warm_runs):
+            started = time.perf_counter()
+            warm = runtime.analyze(text)
+            warm_samples.append(round(time.perf_counter() - started, 2))
     finally:
         stop.set()
         sampler.join()
         samples.append(sample_rss())
     return {
         "cold": {"seconds": round(cold_seconds, 2)},
-        "warm": {"seconds": round(warm_seconds, 2)},
+        "warm": {"median_seconds": round(median(warm_samples), 2), "samples_seconds": warm_samples},
         "peak_rss_mb": round(max(samples), 1),
         "output": warm["summary"],
         "signals": warm["signals"],
@@ -63,6 +68,11 @@ def main() -> int:
         "device": "CPU",
         "processor": platform.processor(),
         "python": platform.python_version(),
+        "measured_at_utc": datetime.now(timezone.utc).isoformat(),
+        "model_revision": "b467368d16b75df14055562fe927ae8e1f15f7ef",
+        "versions": {name: version(name) for name in ("openvino", "openvino-genai", "openvino-tokenizers", "psutil")},
+        "input": args.text,
+        "output_characters": len(report["output"]),
         "model_size_gb": round(sum(item.stat().st_size for item in model_root.rglob("*") if item.is_file()) / 1024**3, 2),
     })
     output = Path(args.output)

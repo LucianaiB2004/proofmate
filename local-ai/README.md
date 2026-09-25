@@ -16,7 +16,8 @@ python -m uvicorn app.main:app --app-dir local-ai --host 127.0.0.1 --port 8787
 模型体积为数 GB，下载不会自动发生。安装 OpenVINO GenAI 后，显式下载 OpenVINO 官方预转换的 `OpenVINO/Qwen3-4B-int4-ov`：
 
 ```powershell
-py -3.12 -m pip install -e "local-ai[dev,openvino]"
+py -3.12 -m venv local-ai/.venv
+local-ai/.venv/Scripts/python.exe -m pip install -e "local-ai[dev,openvino]"
 py -3.12 scripts/download_openvino_model.py --accept-download
 ```
 
