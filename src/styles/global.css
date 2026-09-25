@@ -189,3 +189,53 @@ h1 {
   .header-actions, .repair-action { display: none; }
   .claim-panel, .graph-panel, .risk-panel, .trace-panel, .runtime-panel, .score-card { break-inside: avoid; border-color: #ccc; background: white; color: #111; }
 }
+
+/* Human archive foundation */
+html { background: var(--paper); }
+body {
+  color: var(--ink);
+  background:
+    linear-gradient(rgba(23,23,23,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(23,23,23,.025) 1px, transparent 1px),
+    var(--paper);
+  background-size: 24px 24px, 24px 24px, auto;
+}
+button:focus-visible, input:focus-visible { outline: 3px double var(--audit-red); outline-offset: 3px; }
+.landing-shell { padding: 38px 24px; overflow: hidden; }
+.archive-cover {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(320px, .88fr);
+  width: min(1180px, 100%);
+  min-height: min(720px, calc(100vh - 76px));
+  border: 2px solid var(--ink);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-paper);
+}
+.archive-cover::before, .archive-cover::after { content: ''; position: absolute; z-index: 2; left: 22px; width: 12px; height: 12px; border: 2px solid var(--ink); border-radius: 50%; background: var(--paper); pointer-events: none; }
+.archive-cover::before { top: 24%; }.archive-cover::after { bottom: 24%; }
+.archive-intro { display: flex; flex-direction: column; justify-content: center; min-width: 0; padding: clamp(42px, 6vw, 82px); border-right: 2px solid var(--ink); }
+.archive-meta { position: absolute; top: 0; left: 0; display: flex; flex-wrap: wrap; font: 700 11px/1.4 var(--font-mono); }
+.archive-meta span { padding: 9px 14px; border-right: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+.archive-meta span:last-child { color: var(--paper-raised); background: var(--audit-red); }
+.archive-intro .brand { margin: 36px 0 18px; }.archive-intro .brand span { color: var(--ink); }
+.archive-intro h1 { max-width: 720px; font-size: clamp(48px, 6.8vw, 86px); line-height: 1.02; letter-spacing: -.065em; }
+.hero-actions button { transform: rotate(-1.2deg); border: 2px solid var(--audit-red); border-radius: var(--radius-control); padding: 14px 24px; color: var(--audit-red); background: transparent; box-shadow: inset 0 0 0 2px var(--paper-raised), inset 0 0 0 3px var(--audit-red); font-weight: 800; }
+.archive-intake { position: relative; display: flex; flex-direction: column; justify-content: center; min-width: 0; padding: clamp(34px, 5vw, 64px); background: #e3dccd; }
+.archive-intake h2 { margin: 8px 0 12px; font-size: clamp(30px, 4vw, 52px); letter-spacing: -.04em; }
+.archive-intake > p:not(.folder-tab) { margin: 0 0 22px; color: var(--pencil); line-height: 1.7; }
+.folder-tab { align-self: flex-start; margin: 0; padding: 6px 9px; color: var(--paper-raised); background: var(--ink); font: 700 10px var(--font-mono); letter-spacing: .12em; }
+.paperclip { position: absolute; top: 24px; right: 34px; width: 18px; height: 54px; border: 3px solid var(--ink); border-radius: 12px; transform: rotate(10deg); opacity: .72; pointer-events: none; }
+.archive-intake .dropzone { position: relative; width: 100%; margin: 0; padding: 24px; border: 2px dashed var(--ink); border-radius: var(--radius-control); background: rgba(248,244,234,.62); }
+.dropzone-mark { display: grid; place-items: center; width: 34px; height: 34px; margin-bottom: 12px; border: 1px solid var(--ink); font: 22px var(--font-mono); }
+.dropzone label { font-weight: 800; }.accepted-materials { margin: 12px 0 0; padding: 10px 10px 10px 28px; border-top: 1px solid var(--line); font: 11px/1.5 var(--font-mono); overflow-wrap: anywhere; }
+.intake-notes { display: grid; gap: 7px; margin: 20px 0 0; font-size: 11px; }.intake-notes div { display: grid; grid-template-columns: 58px 1fr; gap: 9px; }.intake-notes dt { color: var(--audit-red); font: 700 10px var(--font-mono); }.intake-notes dd { margin: 0; overflow-wrap: anywhere; }
+
+@media (max-width: 760px) {
+  .landing-shell { padding: 16px 12px; overflow: visible; }
+  .archive-cover { grid-template-columns: 1fr; min-height: auto; }
+  .archive-intro { padding: 76px 28px 38px; border-right: 0; border-bottom: 2px solid var(--ink); }
+  .archive-meta { right: 0; }.archive-meta span { flex: 1 1 auto; }
+  .archive-intro h1 { font-size: clamp(42px, 14vw, 64px); overflow-wrap: anywhere; }
+  .archive-intake { padding: 38px 28px; }.hero-actions { align-items: stretch; flex-direction: column; }.hero-actions button { width: 100%; }
+}

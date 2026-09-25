@@ -1,16 +1,22 @@
 :root {
-  color-scheme: dark;
-  --ink: #0b0b0d;
-  --ink-soft: #15151a;
-  --paper: #f4f0e8;
-  --muted: #a9a5a0;
-  --red: #ff1744;
-  --red-deep: #9b0827;
-  --green: #35d0ba;
-  --line: rgba(244, 240, 232, 0.16);
+  color-scheme: light;
+  --paper: #eee9de;
+  --paper-raised: #f8f4ea;
+  --ink: #171717;
+  --ink-soft: #252522;
+  --audit-red: #d63b32;
+  --instrument-green: #147d68;
+  --pencil: #74716a;
+  --muted: var(--pencil);
+  --red: var(--audit-red);
+  --red-deep: #8f211d;
+  --green: var(--instrument-green);
+  --line: rgba(23, 23, 23, 0.72);
   --font-sans: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  --radius-sm: 10px;
-  --radius-lg: 28px;
-  --shadow-red: 0 24px 80px rgba(255, 23, 68, 0.18);
+  --radius-control: 4px;
+  --radius-sm: 4px;
+  --radius-lg: 8px;
+  --shadow-paper: 8px 9px 0 rgba(23, 23, 23, 0.11);
+  --shadow-red: 4px 5px 0 rgba(214, 59, 50, 0.18);
 }
