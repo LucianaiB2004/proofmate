@@ -25,11 +25,25 @@ it('shows structured Qwen output instead of discarding it', async () => {
   vi.stubGlobal('fetch', vi.fn(async (url: string) => ({
     json: async () => url.includes('local/status')
       ? { state: 'service_unavailable' }
-      : { state: 'provider_ready', claims: [{ statement: '试点节能 18%', risk: '周期过短' }] },
+      : { state: 'provider_ready', claims: [{ statement: '试点节能 18%', risk: '周期过短', repair: '补充对照实验', source: 'report.pdf · P3', excerpt: '试点节能 18%' }] },
   })));
   render(<RuntimePanel text="测试材料" />);
   await userEvent.click(screen.getByRole('button', { name: '检测并分析当前材料' }));
   expect(await screen.findByText(/试点节能 18%｜风险：周期过短/)).toBeVisible();
+  expect(screen.getByText(/来源：report.pdf · P3/)).toBeVisible();
+  vi.unstubAllGlobals();
+});
+
+it('lets a reviewer add structured Qwen findings to the dossier', async () => {
+  const accept = vi.fn();
+  const finding = { statement: '试点节能 18%', risk: '周期过短', repair: '补充对照实验', source: 'report.pdf · P3', excerpt: '试点节能 18%' };
+  vi.stubGlobal('fetch', vi.fn(async (url: string) => ({
+    json: async () => url.includes('local/status') ? { state: 'service_unavailable' } : { state: 'provider_ready', claims: [finding] },
+  })));
+  render(<RuntimePanel text="测试材料" onAcceptQwenFindings={accept} />);
+  await userEvent.click(screen.getByRole('button', { name: '检测并分析当前材料' }));
+  await userEvent.click(await screen.findByRole('button', { name: '确认 1 条云端发现并加入档案' }));
+  expect(accept).toHaveBeenCalledWith([finding]);
   vi.unstubAllGlobals();
 });
 

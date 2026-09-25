@@ -1,5 +1,11 @@
 export interface QwenInput { text: string }
-export interface QwenClaim { statement: string; risk: string }
+export interface QwenClaim {
+  statement: string;
+  risk: string;
+  repair: string;
+  source: string;
+  excerpt: string;
+}
 export type QwenResult =
   | { state: 'provider_not_configured' }
   | { state: 'provider_timeout' }
@@ -15,8 +21,8 @@ function parseClaims(content: string): QwenClaim[] {
   return parsed.claims.filter((claim): claim is QwenClaim => {
     if (typeof claim !== 'object' || claim === null) return false;
     const item = claim as Record<string, unknown>;
-    return typeof item.statement === 'string' && typeof item.risk === 'string';
-  });
+    return ['statement', 'risk', 'repair', 'source', 'excerpt'].every((key) => typeof item[key] === 'string' && item[key].trim().length > 0);
+  }).slice(0, 6);
 }
 
 export async function analyzeWithQwen(
@@ -38,7 +44,7 @@ export async function analyzeWithQwen(
         model: options.model ?? process.env.QWEN_MODEL ?? 'qwen-plus',
         response_format: { type: 'json_object' },
         messages: [
-          { role: 'system', content: '你是真源 ProofMate 的证据审计器。只依据输入材料提取可验证主张和对应风险，以 json 对象 {"claims":[{"statement":"...","risk":"..."}]} 返回。' },
+          { role: 'system', content: '你是真源 ProofMate 的证据审计器。只依据输入材料提取最多6条可验证主张。每条必须包含风险、具体补证动作、输入中可辨认的文件或段落来源、以及支持判断的原文摘录；找不到来源时不要输出该条。以 json 对象 {"claims":[{"statement":"...","risk":"...","repair":"...","source":"文件名或段落位置","excerpt":"输入中的原文摘录"}]} 返回。' },
           { role: 'user', content: input.text },
         ],
       }),

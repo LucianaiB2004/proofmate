@@ -15,11 +15,16 @@ describe('Qwen server adapter', () => {
   });
 
   it('validates and returns Qwen structured output', async () => {
-    const fetchImpl = vi.fn().mockResolvedValue(new Response(JSON.stringify({ choices: [{ message: { content: '{"claims":[{"statement":"节能 31%","risk":"样本周期短"}]}' } }] }), { status: 200 })) as typeof fetch;
+    const fetchImpl = vi.fn().mockResolvedValue(new Response(JSON.stringify({ choices: [{ message: { content: '{"claims":[{"statement":"节能 31%","risk":"样本周期短","repair":"补充30天对照实验","source":"研究报告.pdf · P12","excerpt":"7天节能31%"}]}' } }] }), { status: 200 })) as typeof fetch;
     const result = await analyzeWithQwen({ text: 'report' }, fetchImpl, { apiKey: 'server-only' });
-    expect(result).toEqual({ state: 'provider_ready', claims: [{ statement: '节能 31%', risk: '样本周期短' }] });
+    expect(result).toEqual({ state: 'provider_ready', claims: [{ statement: '节能 31%', risk: '样本周期短', repair: '补充30天对照实验', source: '研究报告.pdf · P12', excerpt: '7天节能31%' }] });
     expect(JSON.stringify(result)).not.toContain('server-only');
     expect((fetchImpl.mock.calls[0][1] as RequestInit).body).toContain('json');
+  });
+
+  it('drops incomplete findings instead of inventing traceability fields', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(new Response(JSON.stringify({ choices: [{ message: { content: '{"claims":[{"statement":"节能 31%","risk":"样本周期短"}]}' } }] }), { status: 200 })) as typeof fetch;
+    await expect(analyzeWithQwen({ text: 'report' }, fetchImpl, { apiKey: 'server-only' })).resolves.toEqual({ state: 'provider_ready', claims: [] });
   });
 
   it('preserves the provider error code without exposing credentials', async () => {

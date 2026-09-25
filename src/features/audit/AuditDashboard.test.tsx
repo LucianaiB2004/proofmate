@@ -50,4 +50,21 @@ describe('evidence cockpit', () => {
     expect(screen.getByRole('button', { name: /部署记录缺少模型版本号/ })).toBeVisible();
     vi.unstubAllGlobals();
   });
+
+  it('turns reviewer-confirmed Qwen findings into linked claims and evidence', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => ({
+      json: async () => url.includes('local/status')
+        ? { state: 'service_ready', model_state: 'ready' }
+        : { state: 'provider_ready', claims: [{ statement: '试点节能 18%', risk: '周期过短', repair: '补充对照实验', source: 'report.pdf · P3', excerpt: '试点节能 18%' }] },
+    })));
+    render(<AuditDashboard initialAudit={demoProject} />);
+    await userEvent.click(screen.getByRole('button', { name: '检测并分析当前材料' }));
+    await userEvent.click(await screen.findByRole('button', { name: '确认 1 条云端发现并加入档案' }));
+    await userEvent.click(screen.getByRole('button', { name: /试点节能 18%/ }));
+    const inspector = screen.getByRole('region', { name: '风险检查器' });
+    expect(within(inspector).getByText('试点节能 18%', { selector: 'blockquote' })).toBeVisible();
+    expect(within(inspector).getByText(/report.pdf · P3/)).toBeVisible();
+    expect(screen.getByText('Qwen 云端复核入档')).toBeVisible();
+    vi.unstubAllGlobals();
+  });
 });

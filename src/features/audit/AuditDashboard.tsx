@@ -9,6 +9,7 @@ import { RiskInspector } from './RiskInspector';
 import { ScoreRing } from './ScoreRing';
 import { RuntimePanel } from '../settings/RuntimePanel';
 import { downloadMarkdownReport } from '../export/buildReport';
+import type { QwenClaim } from '../../../server/qwenClient';
 
 export function AuditDashboard({ initialAudit }: { initialAudit: ProjectAudit }) {
   const [audit, setAudit] = useState(initialAudit);
@@ -39,6 +40,37 @@ export function AuditDashboard({ initialAudit }: { initialAudit: ProjectAudit })
     });
     setSelectedId(id);
   };
+  const acceptQwenFindings = (findings: QwenClaim[]) => {
+    const batch = Date.now().toString(36);
+    const firstId = `claim-qwen-${batch}-0`;
+    setAudit((current) => {
+      const fresh = findings.filter((finding) => !current.claims.some((claim) => claim.statement === finding.statement));
+      if (!fresh.length) return current;
+      const addedEvidence = fresh.map((finding, index) => ({
+        id: `evidence-qwen-${batch}-${index}`,
+        title: `Qwen 定位片段 ${String(index + 1).padStart(2, '0')}`,
+        kind: 'document' as const,
+        excerpt: finding.excerpt,
+        source: finding.source,
+        confidence: 0.72,
+      }));
+      return {
+        ...current,
+        evidence: [...current.evidence, ...addedEvidence],
+        claims: [...current.claims, ...fresh.map((finding, index) => ({
+          id: `claim-qwen-${batch}-${index}`,
+          statement: finding.statement,
+          status: 'weak' as const,
+          importance: 'high' as const,
+          evidenceIds: [addedEvidence[index].id],
+          risk: finding.risk,
+          repair: finding.repair,
+        }))],
+        trace: [...current.trace, { stage: 'cloud' as const, label: 'Qwen 云端复核入档', detail: `${fresh.length} 条带来源发现已由人工确认并写入证据关系。` }],
+      };
+    });
+    setSelectedId(firstId);
+  };
 
   return (
     <main className="cockpit">
@@ -57,7 +89,7 @@ export function AuditDashboard({ initialAudit }: { initialAudit: ProjectAudit })
         <RiskInspector claim={selected} evidence={audit.evidence} repaired={repaired} onRepair={repair} />
       </div>
       <ProcessingTrace items={audit.trace} />
-      <RuntimePanel isDemo={isDemo} text={audit.evidence.map((item) => `${item.source}: ${item.excerpt}`).join('\n').slice(0, 12000)} onAcceptLocalInsight={acceptLocalInsight} />
+      <RuntimePanel isDemo={isDemo} text={audit.evidence.map((item) => `${item.source}: ${item.excerpt}`).join('\n').slice(0, 12000)} onAcceptLocalInsight={acceptLocalInsight} onAcceptQwenFindings={acceptQwenFindings} />
     </main>
   );
 }
