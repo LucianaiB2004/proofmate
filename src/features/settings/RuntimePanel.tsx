@@ -37,11 +37,11 @@ export function RuntimePanel({ text, isDemo = false }: { text: string; isDemo?: 
     <section className="runtime-panel" aria-labelledby="runtime-title">
       <div className="panel-heading"><div><p className="section-kicker">RUNTIME MATRIX</p><h2 id="runtime-title">端云运行状态</h2></div><span>透明可查</span></div>
       <div className="runtime-grid">
-        <article className="is-on"><span>当前</span><strong>{isDemo ? '演示模式' : '真实材料模式'}</strong><p>{isDemo ? '内置项目回放；可用下方按钮验证实时模型。' : '浏览器已读取真实材料；模型能力按需显式启用。'}</p></article>
-        <article><span>端侧</span><strong>Qwen3-4B INT4</strong><p>{local}</p><button type="button" onClick={analyzeLocal} disabled={localBusy}>{localBusy ? '分析中…' : '使用端侧模型分析'}</button></article>
-        <article><span>云端</span><strong>Qwen</strong><p>{cloud}</p><button type="button" onClick={analyze} disabled={busy}>{busy ? '核验中…' : '检测并分析当前材料'}</button></article>
+        <article className="is-on runtime-mode"><span>当前档位</span><strong>{isDemo ? '演示模式' : '真实材料模式'}</strong><p>{isDemo ? '内置项目回放；可用右侧按钮验证实时模型。' : '浏览器已读取真实材料；模型能力按需显式启用。'}</p></article>
+        <article className="runtime-instrument"><span className="instrument-label"><i aria-hidden="true" />DEVICE / LOCAL</span><h3>本地分析仪</h3><strong>Qwen3-4B INT4</strong><p>{local}</p><button type="button" onClick={analyzeLocal} disabled={localBusy}>{localBusy ? '分析中…' : '使用端侧模型分析'}</button></article>
+        <article className="runtime-instrument"><span className="instrument-label"><i aria-hidden="true" />CLOUD / REVIEW</span><h3>云端复核仪</h3><strong>Qwen</strong><p>{cloud}</p><button type="button" onClick={analyze} disabled={busy}>{busy ? '核验中…' : '检测并分析当前材料'}</button></article>
       </div>
-      {insights.length > 0 && <div className="runtime-results" aria-live="polite"><strong>实时模型结果（待人工确认）</strong><ul>{insights.map((item) => <li key={item}>{item}</li>)}</ul></div>}
+      {insights.length > 0 && <div className="runtime-results" data-testid="human-review-slip" aria-live="polite"><strong>待人工确认</strong><p>以下是实时模型建议，尚未写入已确认事实。</p><ul>{insights.map((item) => <li key={item}>{item}</li>)}</ul></div>}
     </section>
   );
 }
