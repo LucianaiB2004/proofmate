@@ -32,7 +32,7 @@ export function CaseGallery({ cases, onBack, onSelect }: CaseGalleryProps) {
               <p>{item.focus}</p>
               <div className="case-card-actions">
                 <button type="button" onClick={() => onSelect(item)}>打开 {item.shortName}</button>
-                <a href={item.sourceUrl} target="_blank" rel="noreferrer">核对原始来源：{item.sourceLabel} ↗</a>
+                <a className="case-source-link" href={item.sourceUrl} target="_blank" rel="noopener noreferrer"><span>打开原始资料 ↗</span><small>{item.sourceLabel}</small></a>
               </div>
             </div>
           </article>

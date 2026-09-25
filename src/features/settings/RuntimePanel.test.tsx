@@ -50,6 +50,24 @@ it('keeps a long local result on a human review slip', async () => {
   vi.unstubAllGlobals();
 });
 
+it('shows a live elapsed timer while local analysis is running', async () => {
+  vi.useFakeTimers();
+  vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+    if (url.includes('local/status')) return { json: async () => ({ state: 'service_ready', model_state: 'ready' }) };
+    return new Promise(() => undefined);
+  }));
+  render(<RuntimePanel text="测试材料" />);
+
+  screen.getByRole('button', { name: '使用端侧模型分析' }).click();
+  await vi.advanceTimersByTimeAsync(2_000);
+
+  expect(screen.getByRole('status')).toHaveTextContent('正在分析');
+  expect(screen.getByRole('status')).toHaveTextContent('00:02');
+  expect(screen.getByRole('button', { name: /分析中 00:02/ })).toBeDisabled();
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
+
 it('lets a reviewer add a local model finding to the evidence dossier', async () => {
   const accept = vi.fn();
   vi.stubGlobal('fetch', vi.fn(async (url: string) => ({

@@ -21,6 +21,7 @@ it('opens the case gallery as a separate page and can return home', async () => 
   expect(screen.getByRole('heading', { name: '公开案例展示' })).toBeVisible();
   expect(screen.getByRole('button', { name: /挑战者号发射决策/ })).toBeEnabled();
   expect(screen.getAllByText(/依据公开资料改编/)).toHaveLength(3);
+  expect(screen.getAllByRole('link', { name: /打开原始资料/ })).toHaveLength(4);
   await userEvent.click(screen.getByRole('button', { name: '返回首页' }));
   expect(screen.getByRole('heading', { name: '每个结论，都能找到它的证据。' })).toBeVisible();
 });
