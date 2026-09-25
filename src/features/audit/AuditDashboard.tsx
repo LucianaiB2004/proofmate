@@ -16,11 +16,28 @@ export function AuditDashboard({ initialAudit }: { initialAudit: ProjectAudit })
   const counts = getRiskCounts(audit);
   const selected = useMemo(() => audit.claims.find((item) => item.id === selectedId) ?? audit.claims[0], [audit, selectedId]);
   const repaired = audit.evidence.some((item) => item.id === demoEvidence.id);
-  const isDemo = audit.id === 'campus-energy-audit';
+  const isDemo = !audit.id.startsWith('import-');
   const archiveNumber = `PM-${audit.id.replace(/[^a-z0-9]/gi, '').slice(0, 10).toUpperCase() || 'UNTITLED'}`;
   const repair = () => {
     setAudit((current) => linkEvidence(current, 'claim-energy', demoEvidence));
     setSelectedId('claim-energy');
+  };
+  const acceptLocalInsight = (summary: string) => {
+    const id = 'claim-openvino-review';
+    setAudit((current) => current.claims.some((claim) => claim.id === id) ? current : {
+      ...current,
+      claims: [...current.claims, {
+        id,
+        statement: summary,
+        status: 'missing',
+        importance: 'high',
+        evidenceIds: [],
+        risk: '这是端侧模型发现的待核验问题，尚缺少人工确认的来源证据。',
+        repair: '回到原始材料定位对应段落，并补充可追溯来源后再确认。',
+      }],
+      trace: [...current.trace, { stage: 'device', label: 'OpenVINO 本地初审', detail: '端侧发现已由人工确认并加入待核验档案。' }],
+    });
+    setSelectedId(id);
   };
 
   return (
@@ -40,7 +57,7 @@ export function AuditDashboard({ initialAudit }: { initialAudit: ProjectAudit })
         <RiskInspector claim={selected} evidence={audit.evidence} repaired={repaired} onRepair={repair} />
       </div>
       <ProcessingTrace items={audit.trace} />
-      <RuntimePanel isDemo={isDemo} text={audit.evidence.map((item) => `${item.source}: ${item.excerpt}`).join('\n').slice(0, 12000)} />
+      <RuntimePanel isDemo={isDemo} text={audit.evidence.map((item) => `${item.source}: ${item.excerpt}`).join('\n').slice(0, 12000)} onAcceptLocalInsight={acceptLocalInsight} />
     </main>
   );
 }

@@ -3,17 +3,19 @@ import type { ProjectAudit } from './domain/types';
 import { FileDropzone } from './features/onboarding/FileDropzone';
 import { ScanSequence } from './features/onboarding/ScanSequence';
 import { AuditDashboard } from './features/audit/AuditDashboard';
+import { demoCases } from './data/demoCases';
 
 export function App() {
   const [view, setView] = useState<'landing' | 'scan' | 'ready'>('landing');
   const [audit, setAudit] = useState<ProjectAudit | null>(null);
   const [files, setFiles] = useState<File[] | null>(null);
+  const [selectedDemo, setSelectedDemo] = useState(demoCases[0].project);
   const finishScan = useCallback((result: ProjectAudit) => {
     setAudit(result);
     setView('ready');
   }, []);
 
-  if (view === 'scan') return <ScanSequence files={files} onComplete={finishScan} />;
+  if (view === 'scan') return <ScanSequence files={files} demoProject={selectedDemo} onComplete={finishScan} />;
 
   if (view === 'ready' && audit) {
     return <AuditDashboard initialAudit={audit} />;
@@ -24,14 +26,14 @@ export function App() {
       <section className="archive-cover" aria-labelledby="hero-title">
         <div className="archive-intro">
           <div className="archive-meta" aria-label="作品档案信息">
-            <span>档案编号 TM-AI-2026 / PM-001</span><span><time dateTime="2026-09">2026.09</time> · <strong>学生作品</strong></span>
+            <span>档案编号 TM-AI-2026 / PM-001</span><span><time dateTime="2026-09">2026.09</time> · <strong>作者 LucianaiB</strong></span>
           </div>
           <p className="eyebrow">天猫 AI 黑客松作品 · Qwen × OpenVINO</p>
-          <p className="brand">真源 <span>ProofMate</span></p>
           <h1 id="hero-title">每个结论，都能找到它的证据。</h1>
+          <p className="plain-promise">你把答辩材料给我，我帮你找出里面站不住脚的结论和缺少的证据。</p>
           <p className="hero-copy">把论文、代码、数据和截图整理成可追溯的证据档案。AI 发现关系，人审阅并盖章确认。</p>
           <div className="hero-actions">
-            <button type="button" onClick={() => { setFiles(null); setView('scan'); }}>体验示例项目</button>
+            <button type="button" onClick={() => { setFiles(null); setSelectedDemo(demoCases[0].project); setView('scan'); }}>体验示例项目</button>
             <span>无需登录 · 可直接审阅 · 结果不替代人工判断</span>
           </div>
         </div>
@@ -46,6 +48,16 @@ export function App() {
             <div><dt>处理</dt><dd>优先在浏览器与端侧完成</dd></div>
           </dl>
         </aside>
+      </section>
+      <section className="case-library" aria-labelledby="case-library-title">
+        <div className="case-library-heading"><div><p className="eyebrow">PUBLIC CASE FILES / 04</p><h2 id="case-library-title">从不同案例里，学会怎么找证据</h2></div><p>公开案例均为教学改编，不代表来源机构的原始结论。</p></div>
+        <div className="case-grid">
+          {demoCases.map((item, index) => <article className="case-card" key={item.id}>
+            <span className="case-index">0{index + 1}</span><small>{item.provenance}</small>
+            <h3>{item.shortName}</h3><p>{item.focus}</p>
+            <div><button type="button" onClick={() => { setFiles(null); setSelectedDemo(item.project); setView('scan'); }}>打开 {item.shortName}</button><a href={item.sourceUrl} target="_blank" rel="noreferrer">查看来源：{item.sourceLabel}</a></div>
+          </article>)}
+        </div>
       </section>
     </main>
   );

@@ -30,6 +30,9 @@ class ReadyRuntime(MissingRuntime):
     def fingerprint(self, text):
         return [0.1, 0.2, 0.3]
 
+    def device_info(self):
+        return {"device": "GPU.0", "device_name": "NVIDIA GeForce RTX 3050 Laptop GPU"}
+
 
 class BrokenRuntime(ReadyRuntime):
     def analyze(self, text):
@@ -46,6 +49,16 @@ def test_model_endpoint_distinguishes_missing_model():
 def test_health_is_ready_even_when_optional_model_is_missing():
     client = TestClient(create_app(MissingRuntime()))
     assert client.get("/health").json() == {"state": "service_ready", "model_state": "model_unavailable"}
+
+
+def test_health_exposes_the_inference_device_when_available():
+    client = TestClient(create_app(ReadyRuntime()))
+    assert client.get("/health").json() == {
+        "state": "service_ready",
+        "model_state": "service_ready",
+        "device": "GPU.0",
+        "device_name": "NVIDIA GeForce RTX 3050 Laptop GPU",
+    }
 
 
 def test_analyze_rejects_empty_text():

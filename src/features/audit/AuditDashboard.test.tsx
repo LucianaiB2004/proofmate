@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { demoProject } from '../../data/demoProject';
 import { AuditDashboard } from './AuditDashboard';
+import { vi } from 'vitest';
 
 describe('evidence cockpit', () => {
   it('shows the calculated score and every claim state', () => {
@@ -33,7 +34,20 @@ describe('evidence cockpit', () => {
     await userEvent.click(action);
     expect(screen.getByLabelText('证据健康度 85 分')).toBeVisible();
     expect(action).toBeDisabled();
-    expect(screen.getAllByText('30 天对照实验')).toHaveLength(1);
+    expect(screen.getByRole('figure', { name: /与 3 条证据的关系图/ })).toHaveTextContent('30 天对照实验');
     expect(screen.getByRole('status')).toHaveTextContent('证据闭环');
+  });
+
+  it('adds a reviewer-confirmed OpenVINO finding as a traceable claim', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => ({
+      json: async () => url.includes('local/status')
+        ? { state: 'service_ready', model_state: 'ready' }
+        : { state: 'service_ready', result: { summary: '部署记录缺少模型版本号' } },
+    })));
+    render(<AuditDashboard initialAudit={demoProject} />);
+    await userEvent.click(screen.getByRole('button', { name: '使用端侧模型分析' }));
+    await userEvent.click(await screen.findByRole('button', { name: '确认并加入档案' }));
+    expect(screen.getByRole('button', { name: /部署记录缺少模型版本号/ })).toBeVisible();
+    vi.unstubAllGlobals();
   });
 });

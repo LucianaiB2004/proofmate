@@ -1,29 +1,30 @@
 import type { Claim, EvidenceItem } from '../../domain/types';
 
+const kindLabel: Record<EvidenceItem['kind'], string> = {
+  document: '文档', code: '代码', data: '数据', image: '图片', log: '日志',
+};
+
 export function EvidenceGraph({ claim, evidence }: { claim: Claim; evidence: EvidenceItem[] }) {
   const linked = evidence.filter((item) => claim.evidenceIds.includes(item.id));
+  const label = `${claim.statement} 与 ${linked.length} 条证据的关系图`;
   return (
     <section className="graph-panel" aria-labelledby="graph-title">
-      <div className="panel-heading"><div><p className="section-kicker">EVIDENCE MAP / PINBOARD</p><h2 id="graph-title">证据关系板</h2></div><span>支持关系</span></div>
-      <div className="graph-scroll">
-        <svg className="evidence-graph" viewBox="0 0 700 330" role="img" aria-label={`${claim.statement} 与 ${linked.length} 条证据的关系图`}>
-          <defs><linearGradient id="nodeGlow"><stop stopColor="#d63b32"/><stop offset="1" stopColor="#8f211d"/></linearGradient></defs>
-          {linked.map((item, index) => {
-            const x = 475 + (index % 2) * 135;
-            const y = 80 + Math.floor(index / 2) * 150;
-            return <g key={item.id}>
-              <line x1="310" y1="165" x2={x} y2={y} className={claim.status === 'conflict' && index === 1 ? 'edge-conflict' : 'edge-support'} />
-              <rect x={x - 62} y={y - 30} width="124" height="60" rx="2" className="evidence-node" />
-              <text x={x} y={y - 2} textAnchor="middle">{item.kind.toUpperCase()}</text>
-              <text x={x} y={y + 14} textAnchor="middle" className="node-source">{item.source.split(' · ')[0].slice(0, 16)}</text>
-            </g>;
+      <div className="panel-heading"><div><p className="section-kicker">EVIDENCE MAP / PINBOARD</p><h2 id="graph-title">证据关系板</h2></div><span>{linked.length} 条已关联</span></div>
+      <figure className="evidence-board" aria-label={label}>
+        <article className="claim-card"><span>核心主张</span><strong>{claim.statement}</strong><small>{claim.status === 'verified' ? '证据闭环' : claim.status === 'conflict' ? '存在冲突' : '等待补证'}</small></article>
+        <div className="relation-rail" aria-hidden="true"><span /></div>
+        <div className="evidence-card-list">
+          {linked.length === 0 ? <article className="evidence-gap"><span>＋</span><div><strong>这里还缺证据</strong><p>补充可追溯材料后，关系会出现在这里。</p></div></article> : linked.map((item, index) => {
+            const relation = claim.status === 'conflict' && index === 1 ? 'conflict' : 'support';
+            return <article className={`evidence-card relation-${relation}`} key={item.id}>
+              <div className="evidence-card-top"><span>{kindLabel[item.kind]}</span><b>{relation === 'conflict' ? '冲突' : '支持'}</b></div>
+              <strong>{item.title}</strong><p>{item.excerpt}</p>
+              <footer><span>{item.source}</span><em>{Math.round(item.confidence * 100)}%</em></footer>
+            </article>;
           })}
-          <circle cx="260" cy="165" r="82" fill="url(#nodeGlow)" />
-          <text x="260" y="150" textAnchor="middle" className="claim-node-label">核心主张</text>
-          <foreignObject x="190" y="162" width="140" height="55"><div className="claim-node-copy">{claim.statement}</div></foreignObject>
-        </svg>
-      </div>
-      <p className="graph-legend"><span className="support-dot" />支持 <span className="conflict-dot" />冲突</p>
+        </div>
+      </figure>
+      <p className="graph-legend"><span className="support-dot" />支持证据 <span className="conflict-dot" />冲突证据</p>
     </section>
   );
 }

@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
 
-export function RuntimePanel({ text, isDemo = false }: { text: string; isDemo?: boolean }) {
+export function RuntimePanel({ text, isDemo = false, onAcceptLocalInsight }: { text: string; isDemo?: boolean; onAcceptLocalInsight?: (summary: string) => void }) {
   const [local, setLocal] = useState('正在探测端侧服务…');
   const [cloud, setCloud] = useState('百炼 API · 等待检测');
   const [busy, setBusy] = useState(false);
   const [localBusy, setLocalBusy] = useState(false);
   const [insights, setInsights] = useState<string[]>([]);
+  const [localInsight, setLocalInsight] = useState('');
+  const [localAccepted, setLocalAccepted] = useState(false);
   useEffect(() => {
     fetch('/api/local/status').then((response) => response.json()).then((result) => {
-      setLocal(result.state === 'service_ready' ? `OpenVINO · ${result.model_state}` : 'OpenVINO · 服务未启动');
+      const device = result.device_name ? `${result.device} · ${result.device_name}` : result.model_state;
+      setLocal(result.state === 'service_ready' ? `OpenVINO · ${device}` : 'OpenVINO · 服务未启动');
     }).catch(() => setLocal('OpenVINO · 服务未启动'));
   }, []);
   const analyze = async () => {
@@ -28,8 +31,11 @@ export function RuntimePanel({ text, isDemo = false }: { text: string; isDemo?: 
       const response = await fetch('/api/local/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
       const result = await response.json();
       if (result.state === 'service_ready') {
+        const summary = result.result?.summary ?? '分析完成，未返回摘要';
         setLocal('OpenVINO · 本地分析完成');
-        setInsights([`端侧模型建议：${result.result?.summary ?? '分析完成，未返回摘要'}`]);
+        setLocalInsight(summary);
+        setLocalAccepted(false);
+        setInsights([`端侧模型建议：${summary}`]);
       } else setLocal(`OpenVINO · ${result.detail?.state ?? result.state}`);
     } catch { setLocal('OpenVINO · 服务连接失败'); } finally { setLocalBusy(false); }
   };
@@ -41,7 +47,7 @@ export function RuntimePanel({ text, isDemo = false }: { text: string; isDemo?: 
         <article className="runtime-instrument"><span className="instrument-label"><i aria-hidden="true" />DEVICE / LOCAL</span><h3>本地分析仪</h3><strong>Qwen3-4B INT4</strong><p>{local}</p><button type="button" onClick={analyzeLocal} disabled={localBusy}>{localBusy ? '分析中…' : '使用端侧模型分析'}</button></article>
         <article className="runtime-instrument"><span className="instrument-label"><i aria-hidden="true" />CLOUD / REVIEW</span><h3>云端复核仪</h3><strong>Qwen</strong><p>{cloud}</p><button type="button" onClick={analyze} disabled={busy}>{busy ? '核验中…' : '检测并分析当前材料'}</button></article>
       </div>
-      {insights.length > 0 && <div className="runtime-results" data-testid="human-review-slip" aria-live="polite"><strong>待人工确认</strong><p>以下是实时模型建议，尚未写入已确认事实。</p><ul>{insights.map((item) => <li key={item}>{item}</li>)}</ul></div>}
+      {insights.length > 0 && <div className="runtime-results" data-testid="human-review-slip" aria-live="polite"><strong>待人工确认</strong><p>以下是实时模型建议，尚未写入已确认事实。</p><ul>{insights.map((item) => <li key={item}>{item}</li>)}</ul>{localInsight && onAcceptLocalInsight && <button type="button" className="accept-insight" disabled={localAccepted} onClick={() => { onAcceptLocalInsight(localInsight); setLocalAccepted(true); }}>{localAccepted ? '已加入档案' : '确认并加入档案'}</button>}</div>}
     </section>
   );
 }

@@ -4,7 +4,7 @@ import { PDFDocument, StandardFonts } from 'pdf-lib';
 test('completes the evidence repair story and exports the report', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: '每个结论，都能找到它的证据。' })).toBeVisible();
-  await expect(page.getByText('学生作品')).toBeVisible();
+  await expect(page.getByText('作者 LucianaiB')).toBeVisible();
   await expect(page.getByText(/档案编号 TM-AI-2026/)).toBeVisible();
   await page.getByRole('button', { name: '体验示例项目' }).click();
   await expect(page.getByRole('heading', { name: '正在重建项目的证据链' })).toBeVisible();

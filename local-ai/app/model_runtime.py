@@ -42,6 +42,17 @@ class ModelRuntime:
             return {**base, "state": "inference_failed", "detail": self._load_error}
         return {**base, "state": "service_ready", "detail": "模型文件已发现，将在首次请求时加载。"}
 
+    def device_info(self) -> dict[str, str]:
+        try:
+            import openvino as ov  # type: ignore
+
+            core = ov.Core()
+            device = self.config.device
+            resolved = device if device in core.available_devices else "CPU"
+            return {"device": resolved, "device_name": str(core.get_property(resolved, "FULL_DEVICE_NAME")).strip()}
+        except Exception:
+            return {"device": self.config.device, "device_name": self.config.device}
+
     def analyze(self, text: str) -> dict[str, Any]:
         pipeline = self._load()
         prompt = (

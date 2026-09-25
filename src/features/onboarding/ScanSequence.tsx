@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { demoProject } from '../../data/demoProject';
+import { demoProject as defaultDemoProject } from '../../data/demoProject';
 import type { ProjectAudit } from '../../domain/types';
 import { buildImportedAudit } from './buildImportedAudit';
 import pixelScanner from '../../assets/archive/pixel-scanner.webp';
@@ -10,13 +10,13 @@ const demoStages = [
   { label: '模型核验仪', detail: '样例回放：构建 6 条主张与 10 个证据节点。', mode: 'CLOUD' },
 ];
 
-export function ScanSequence({ files, onComplete }: { files?: File[] | null; onComplete: (audit: ProjectAudit) => void }) {
+export function ScanSequence({ files, demoProject = defaultDemoProject, onComplete }: { files?: File[] | null; demoProject?: ProjectAudit; onComplete: (audit: ProjectAudit) => void }) {
   const [activeStage, setActiveStage] = useState(0);
   const stages = files?.length ? [
     { label: '材料清点仪', detail: `已接收 ${files.length} 份真实材料，原始文件不离开浏览器。`, mode: 'DEVICE' },
     { label: '隐私检查仪', detail: '读取文本、CSV、JSON 与 PDF 正文；图片仅清点，不伪造 OCR 结果。', mode: 'PRIVATE' },
     { label: '模型核验仪', detail: '先生成本地候选；进入档案桌后可检测 Qwen / OpenVINO。', mode: 'READY' },
-  ] : demoStages;
+  ] : demoStages.map((stage, index) => index === 2 ? { ...stage, detail: `样例回放：构建 ${demoProject.claims.length} 条主张与 ${demoProject.evidence.length} 个证据节点。` } : stage);
 
   useEffect(() => {
     const timers = [
@@ -25,7 +25,7 @@ export function ScanSequence({ files, onComplete }: { files?: File[] | null; onC
       window.setTimeout(() => { void (files?.length ? buildImportedAudit(files).then(onComplete) : Promise.resolve(onComplete(demoProject))); }, 2400),
     ];
     return () => timers.forEach(window.clearTimeout);
-  }, [files, onComplete]);
+  }, [files, demoProject, onComplete]);
 
   return (
     <main className="scan-shell">

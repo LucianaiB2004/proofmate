@@ -29,7 +29,12 @@ def create_app(runtime: Runtime | None = None) -> FastAPI:
 
     @app.get("/health")
     def health() -> dict[str, str]:
-        return {"state": "service_ready", "model_state": model_runtime.status()["state"]}
+        status = model_runtime.status()
+        result = {"state": "service_ready", "model_state": status["state"]}
+        device_info = getattr(model_runtime, "device_info", None)
+        if callable(device_info):
+            result.update(device_info())
+        return result
 
     @app.get("/v1/local/model")
     def model() -> dict[str, Any]:
