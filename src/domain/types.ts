@@ -8,6 +8,8 @@ export interface EvidenceItem {
   excerpt: string;
   source: string;
   confidence: number;
+  relation?: 'support' | 'conflict' | 'unrelated' | 'unreviewed';
+  reason?: string;
 }
 
 export interface Claim {

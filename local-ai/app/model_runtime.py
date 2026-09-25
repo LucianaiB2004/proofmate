@@ -72,3 +72,26 @@ class ModelRuntime:
         # Deterministic content fingerprint for deduplication, not a semantic embedding.
         digest = hashlib.sha256(text.encode("utf-8")).digest()
         return [round((byte / 127.5) - 1, 6) for byte in digest]
+
+    def assess_evidence(self, claim: str, evidence: str, source: str) -> dict[str, Any]:
+        pipeline = self._load()
+        prompt = (
+            "你是真源 ProofMate 的端侧证据核验员。判断候选材料与主张之间的关系。"
+            "只允许输出支持、冲突或无关，不得因为出现相同关键词就判为支持。"
+            "原文必须逐字摘自材料，不要编造。严格按四行输出：\n"
+            "关系：支持/冲突/无关\n原文：材料中的最关键一句\n理由：一句话说明判断依据\n置信度：0到100的整数"
+            f"\n/no_think\n\n主张：{claim}\n来源：{source}\n候选材料：{evidence[:12000]}"
+        )
+        output = pipeline.generate(prompt, max_new_tokens=180, do_sample=False)
+        result = re.sub(r"<think>.*?</think>", "", str(output), flags=re.DOTALL).strip()
+        fields: dict[str, str] = {}
+        for label in ("关系", "原文", "理由", "置信度"):
+            match = re.search(rf"{label}[：:]\s*(.+)", result)
+            fields[label] = match.group(1).strip() if match else ""
+        relation = {"支持": "support", "冲突": "conflict", "无关": "unrelated"}.get(fields["关系"], "unrelated")
+        excerpt = fields["原文"]
+        if not excerpt or excerpt not in evidence:
+            excerpt = next((part.strip() for part in re.split(r"[。！？\n]", evidence) if part.strip()), evidence[:240].strip())
+        confidence_match = re.search(r"\d+", fields["置信度"])
+        confidence = min(100, max(0, int(confidence_match.group()))) / 100 if confidence_match else 0.5
+        return {"relation": relation, "excerpt": excerpt[:300], "reason": fields["理由"] or "端侧模型未提供判断理由。", "confidence": confidence}

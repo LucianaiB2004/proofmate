@@ -15,10 +15,12 @@ export function EvidenceGraph({ claim, evidence }: { claim: Claim; evidence: Evi
         <div className="relation-rail" aria-hidden="true"><span /></div>
         <div className="evidence-card-list">
           {linked.length === 0 ? <article className="evidence-gap"><span>＋</span><div><strong>这里还缺证据</strong><p>补充可追溯材料后，关系会出现在这里。</p></div></article> : linked.map((item, index) => {
-            const relation = claim.status === 'conflict' && index === 1 ? 'conflict' : 'support';
+            const relation = item.relation ?? (claim.status === 'conflict' && index === 1 ? 'conflict' : 'support');
+            const relationLabel = { support: '支持', conflict: '冲突', unrelated: '无关', unreviewed: '待判断' }[relation];
             return <article className={`evidence-card relation-${relation}`} key={item.id}>
-              <div className="evidence-card-top"><span>{kindLabel[item.kind]}</span><b>{relation === 'conflict' ? '冲突' : '支持'}</b></div>
+              <div className="evidence-card-top"><span>{kindLabel[item.kind]}</span><b>{relationLabel}</b></div>
               <strong>{item.title}</strong><p>{item.excerpt}</p>
+              {item.reason && <p className="evidence-reason">{item.reason}</p>}
               <footer><span>{item.source}</span><em>{Math.round(item.confidence * 100)}%</em></footer>
             </article>;
           })}

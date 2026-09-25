@@ -51,6 +51,15 @@ function qwenProxyPlugin(apiKey: string, model: string): Plugin {
           response.end(await upstream.text());
         } catch { response.statusCode = 503; response.end(JSON.stringify({ state: 'service_unavailable' })); }
       });
+      server.middlewares.use('/api/local/evidence', async (request, response) => {
+        response.setHeader('Content-Type', 'application/json; charset=utf-8');
+        try {
+          const body = await readJson(request);
+          const upstream = await fetch('http://127.0.0.1:8787/v1/local/evidence', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(120000) });
+          response.statusCode = upstream.status;
+          response.end(await upstream.text());
+        } catch { response.statusCode = 503; response.end(JSON.stringify({ state: 'service_unavailable' })); }
+      });
     },
   };
 }

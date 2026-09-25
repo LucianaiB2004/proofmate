@@ -16,7 +16,7 @@ import { parseLocalReviews } from './parseLocalReview';
 export function AuditDashboard({ initialAudit }: { initialAudit: ProjectAudit }) {
   const [audit, setAudit] = useState(initialAudit);
   const [selectedId, setSelectedId] = useState('claim-energy');
-  const [evidenceNotice, setEvidenceNotice] = useState<{ claimId: string; text: string }>();
+  const [evidenceNotice, setEvidenceNotice] = useState<{ claimId: string; title: string; text: string }>();
   const counts = getRiskCounts(audit);
   const selected = useMemo(() => audit.claims.find((item) => item.id === selectedId) ?? audit.claims[0], [audit, selectedId]);
   const repaired = audit.evidence.some((item) => item.id === demoEvidence.id);
@@ -52,17 +52,32 @@ export function AuditDashboard({ initialAudit }: { initialAudit: ProjectAudit })
   const uploadEvidence = async (file: File) => {
     const text = (await extractFileText(file)).replace(/\s+/g, ' ').trim();
     if (!text) {
-      setEvidenceNotice({ claimId: selected.id, text: '没有读取到可核对的正文。请改用 PDF、Markdown、TXT、CSV 或 JSON 文件。' });
+      setEvidenceNotice({ claimId: selected.id, title: '没有读取到正文', text: '请改用 PDF、Markdown、TXT、CSV 或 JSON 文件。' });
       return;
+    }
+    let assessment: { relation: 'support' | 'conflict' | 'unrelated' | 'unreviewed'; excerpt: string; reason: string; confidence: number };
+    try {
+      const response = await fetch('/api/local/evidence', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ claim: selected.statement, evidence: text.slice(0, 12000), source: file.name }) });
+      const payload = await response.json();
+      if (!payload.result) throw new Error('missing assessment');
+      assessment = payload.result;
+    } catch {
+      assessment = { relation: 'unreviewed', excerpt: text.slice(0, 260), reason: '端侧核验服务暂不可用，尚未判断这份材料与主张的关系。', confidence: 0 };
     }
     const evidenceId = `evidence-upload-${Date.now().toString(36)}`;
     setAudit((current) => ({
       ...current,
-      evidence: [...current.evidence, { id: evidenceId, title: file.name, kind: 'document', excerpt: text.slice(0, 260), source: file.name, confidence: 0.78 }],
-      claims: current.claims.map((claim) => claim.id === selected.id ? { ...claim, status: claim.status === 'verified' ? 'verified' : 'weak', evidenceIds: [...claim.evidenceIds, evidenceId] } : claim),
-      trace: [...current.trace, { stage: 'device', label: '人工补证入档', detail: `“${file.name}”已解析并连接到主张，等待人工确认两者关系。` }],
+      evidence: [...current.evidence, { id: evidenceId, title: file.name, kind: 'document', excerpt: assessment.excerpt, source: file.name, confidence: assessment.confidence, relation: assessment.relation, reason: assessment.reason }],
+      claims: current.claims.map((claim) => claim.id === selected.id ? { ...claim, status: assessment.relation === 'conflict' ? 'conflict' : assessment.relation === 'support' && claim.status !== 'verified' ? 'weak' : claim.status, evidenceIds: [...claim.evidenceIds, evidenceId] } : claim),
+      trace: [...current.trace, { stage: 'device', label: 'OpenVINO 证据核验', detail: `“${file.name}”已解析；端侧判断为${{ support: '支持', conflict: '冲突', unrelated: '无关', unreviewed: '待判断' }[assessment.relation]}。` }],
     }));
-    setEvidenceNotice({ claimId: selected.id, text: `“${file.name}”已解析并连接为候选证据。请核对原文与主张是否一致，再确认关系。` });
+    setEvidenceNotice(assessment.relation === 'support'
+      ? { claimId: selected.id, title: '找到证据啦', text: `${assessment.reason}。已定位原文，请核对后确认关系。` }
+      : assessment.relation === 'conflict'
+        ? { claimId: selected.id, title: '发现冲突证据', text: `${assessment.reason}。请修正主张或补充更可靠的材料。` }
+        : assessment.relation === 'unrelated'
+          ? { claimId: selected.id, title: '这份材料不相关', text: `${assessment.reason}，不能用于证明当前主张。` }
+          : { claimId: selected.id, title: '等待人工判断', text: assessment.reason });
   };
   const confirmEvidence = () => {
     setAudit((current) => {
@@ -75,7 +90,7 @@ export function AuditDashboard({ initialAudit }: { initialAudit: ProjectAudit })
         trace: [...current.trace, { stage: 'device', label: '人工确认关系', detail: '审阅者已确认候选证据能够支持当前主张，证据闭环完成。' }],
       };
     });
-    setEvidenceNotice({ claimId: selected.id, text: '证据关系已由你确认，主张状态已更新为“已证实”。' });
+    setEvidenceNotice({ claimId: selected.id, title: '证据闭环', text: '证据关系已由你确认，主张状态已更新为“已证实”。' });
   };
   const acceptQwenFindings = (findings: QwenClaim[]) => {
     const batch = Date.now().toString(36);
@@ -90,6 +105,7 @@ export function AuditDashboard({ initialAudit }: { initialAudit: ProjectAudit })
         excerpt: finding.excerpt,
         source: finding.source,
         confidence: 0.72,
+        relation: 'support' as const,
       }));
       return {
         ...current,
@@ -123,7 +139,7 @@ export function AuditDashboard({ initialAudit }: { initialAudit: ProjectAudit })
       <div className="cockpit-grid">
         <ClaimList claims={audit.claims} selectedId={selected.id} onSelect={setSelectedId} />
         <EvidenceGraph claim={selected} evidence={audit.evidence} />
-        <RiskInspector claim={selected} evidence={audit.evidence} repaired={repaired} notice={evidenceNotice?.claimId === selected.id ? evidenceNotice.text : undefined} onRepair={repair} onEvidenceUpload={uploadEvidence} onConfirmEvidence={confirmEvidence} />
+        <RiskInspector claim={selected} evidence={audit.evidence} repaired={repaired} notice={evidenceNotice?.claimId === selected.id ? evidenceNotice : undefined} onRepair={repair} onEvidenceUpload={uploadEvidence} onConfirmEvidence={confirmEvidence} />
       </div>
       <ProcessingTrace items={audit.trace} />
       <RuntimePanel isDemo={isDemo} text={audit.evidence.map((item) => `${item.source}: ${item.excerpt}`).join('\n').slice(0, 12000)} onAcceptLocalInsight={acceptLocalInsight} onAcceptQwenFindings={acceptQwenFindings} />

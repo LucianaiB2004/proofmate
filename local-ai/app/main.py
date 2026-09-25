@@ -10,6 +10,7 @@ class Runtime(Protocol):
     def status(self) -> dict[str, Any]: ...
     def analyze(self, text: str) -> dict[str, Any]: ...
     def fingerprint(self, text: str) -> list[float]: ...
+    def assess_evidence(self, claim: str, evidence: str, source: str) -> dict[str, Any]: ...
 
 
 class TextRequest(BaseModel):
@@ -21,6 +22,12 @@ class TextRequest(BaseModel):
         if not value.strip():
             raise ValueError("text must not be blank")
         return value.strip()
+
+
+class EvidenceRequest(BaseModel):
+    claim: str = Field(min_length=1, max_length=2_000)
+    evidence: str = Field(min_length=1, max_length=50_000)
+    source: str = Field(min_length=1, max_length=500)
 
 
 def create_app(runtime: Runtime | None = None) -> FastAPI:
@@ -53,6 +60,15 @@ def create_app(runtime: Runtime | None = None) -> FastAPI:
     def fingerprint(request: TextRequest) -> dict[str, Any]:
         try:
             return {"state": "service_ready", "fingerprint": model_runtime.fingerprint(request.text)}
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=503, detail={"state": "model_unavailable", "message": str(exc)}) from exc
+        except Exception as exc:
+            raise HTTPException(status_code=503, detail={"state": "inference_failed", "message": str(exc)}) from exc
+
+    @app.post("/v1/local/evidence")
+    def assess_evidence(request: EvidenceRequest) -> dict[str, Any]:
+        try:
+            return {"state": "service_ready", "result": model_runtime.assess_evidence(request.claim, request.evidence, request.source)}
         except FileNotFoundError as exc:
             raise HTTPException(status_code=503, detail={"state": "model_unavailable", "message": str(exc)}) from exc
         except Exception as exc:
