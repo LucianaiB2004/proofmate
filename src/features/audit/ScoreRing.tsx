@@ -7,8 +7,8 @@ const labels: Array<[keyof AuditDimensions, string]> = [
 export function ScoreRing({ score, dimensions }: { score: number; dimensions: AuditDimensions }) {
   return (
     <section className="score-card" aria-label={`证据健康度 ${score} 分`}>
-      <div className="score-ring" style={{ '--score': score } as React.CSSProperties}>
-        <div><strong aria-live="polite">{score}</strong><span>/ 100</span></div>
+      <div className="score-ring" role="img" aria-label={`证据审核章，健康度 ${score} 分`}>
+        <div><span>证据审核</span><strong aria-live="polite">{score}</strong><small>/ 100</small></div>
       </div>
       <div className="score-copy">
         <p className="section-kicker">EVIDENCE HEALTH</p>
@@ -16,7 +16,7 @@ export function ScoreRing({ score, dimensions }: { score: number; dimensions: Au
         <p>每个分数都来自可追溯材料，而不是模型的主观印象。</p>
       </div>
       <dl className="dimension-grid">
-        {labels.map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{dimensions[key]}</dd></div>)}
+        {labels.map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{dimensions[key]}</dd><meter min="0" max="100" value={dimensions[key]} aria-label={`${label} ${dimensions[key]} 分`} /></div>)}
       </dl>
     </section>
   );

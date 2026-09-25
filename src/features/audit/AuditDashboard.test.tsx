@@ -8,6 +8,9 @@ describe('evidence cockpit', () => {
     render(<AuditDashboard initialAudit={demoProject} />);
 
     expect(screen.getByLabelText('证据健康度 68 分')).toBeVisible();
+    expect(screen.getByText(/项目卷宗/)).toBeInTheDocument();
+    expect(screen.getByText(/档案编号/)).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /证据审核章/ })).toBeInTheDocument();
     expect(screen.getByText('2 已证实')).toBeVisible();
     expect(screen.getByText('1 待补证')).toBeVisible();
     expect(screen.getByText('1 有冲突')).toBeVisible();
@@ -31,5 +34,6 @@ describe('evidence cockpit', () => {
     expect(screen.getByLabelText('证据健康度 85 分')).toBeVisible();
     expect(action).toBeDisabled();
     expect(screen.getAllByText('30 天对照实验')).toHaveLength(1);
+    expect(screen.getByRole('status')).toHaveTextContent('证据闭环');
   });
 });
