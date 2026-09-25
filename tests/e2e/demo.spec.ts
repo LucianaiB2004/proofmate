@@ -78,5 +78,7 @@ test('carries the local AI result through the Vite proxy into the product UI', a
   await expect(page.getByLabel('证据健康度 68 分')).toBeVisible({ timeout: 7000 });
   await expect(page.getByText('OpenVINO · service_ready')).toBeVisible();
   await page.getByRole('button', { name: '使用端侧模型分析' }).click();
-  await expect(page.getByText(/代理链路返回的端侧证据结论/)).toBeVisible();
+  const result = page.getByText(/代理链路返回的端侧证据结论/);
+  await expect(result).toBeVisible();
+  expect(await result.evaluate((node) => getComputedStyle(node).color)).toBe('rgb(23, 23, 23)');
 });
