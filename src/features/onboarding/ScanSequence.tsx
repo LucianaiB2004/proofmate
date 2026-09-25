@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { demoProject } from '../../data/demoProject';
 import type { ProjectAudit } from '../../domain/types';
 import { buildImportedAudit } from './buildImportedAudit';
+import pixelScanner from '../../assets/archive/pixel-scanner.webp';
 
 const demoStages = [
   { label: '材料清点仪', detail: '样例回放：识别 12 份项目材料，原始文件不离开设备。', mode: 'DEVICE' },
@@ -29,6 +30,7 @@ export function ScanSequence({ files, onComplete }: { files?: File[] | null; onC
   return (
     <main className="scan-shell">
       <header className="scan-header">
+        <img className="pixel-scanner" src={pixelScanner} alt="" />
         <p className="eyebrow">{files?.length ? '真实材料 · LOCAL FIRST' : '样例分析回放 · DEMO REPLAY'}</p>
         <h1>正在重建项目的证据链</h1>
         <p>端侧先处理隐私与索引，必要片段再进入云端推理。</p>
