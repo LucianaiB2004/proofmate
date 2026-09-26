@@ -17,14 +17,20 @@ export function RiskInspector({ claim, evidence, repaired, notice, onRepair, onE
     <section className="risk-panel" role="region" aria-label="风险检查器">
       <p className="section-kicker">REVIEWER MARGIN / RED PEN</p>
       <h2>{claim.status === 'verified' ? '证据闭环' : '为什么有风险？'}</h2>
+      <h3 className="selected-claim-detail">{claim.statement}</h3>
       <p className="risk-copy">{claim.risk || '这条主张已经形成可追溯证据链。'}</p>
       <div className="source-stack">
-        {sources.map((item, index) => <article key={item.id}><header><span>证据 {String(index + 1).padStart(2, '0')} · {item.kind}</span><strong>{item.title}</strong></header><blockquote>{item.excerpt}</blockquote><footer>{item.source} · 可信度 {Math.round(item.confidence * 100)}%</footer></article>)}
+        {sources.map((item, index) => {
+          const relation = item.relation ?? 'support';
+          const relationLabel = relation === 'support' ? '支持证据' : relation === 'conflict' ? '冲突证据' : relation === 'unrelated' ? '无关材料' : '定位提示 · 待判断';
+          return <article key={item.id}><header><span>{relationLabel}</span><strong>{item.title}</strong></header><small className="source-index">记录 {String(index + 1).padStart(2, '0')} · {item.kind}</small><blockquote>{item.excerpt}</blockquote>{item.reason && <p className="source-reason">{item.reason}</p>}<footer>{item.source} · 可信度 {Math.round(item.confidence * 100)}%</footer></article>;
+        })}
       </div>
       <div className="repair-box"><span>建议修复</span><p>{claim.repair}</p></div>
       {notice && <div className="evidence-found" role="status"><strong>{notice.title}</strong><p>{notice.text}</p></div>}
       {claim.id === 'claim-energy' ? <button className="repair-action" type="button" onClick={onRepair} disabled={repaired}>{repaired ? '30 天对照实验已入链' : '补充 30 天对照实验'}</button> : <>
-        <input ref={inputRef} className="visually-hidden" aria-label="按建议上传证据文件" type="file" accept=".pdf,.md,.txt,.csv,.json" multiple onChange={(event) => { void upload(Array.from(event.target.files ?? [])); event.target.value = ''; }} />
+        <input ref={inputRef} className="visually-hidden" aria-label="按建议上传证据文件" type="file" accept=".pdf,.md,.txt,.csv,.json,.png,.jpg,.jpeg,.webp" multiple onChange={(event) => { void upload(Array.from(event.target.files ?? [])); event.target.value = ''; }} />
+        <small className="evidence-upload-note">图片和扫描 PDF 会自动使用 TextIn OCR，再进入证据核验。</small>
         <button className="repair-action" type="button" onClick={() => inputRef.current?.click()} disabled={uploading}>{uploading ? `正在逐份核验 ${uploadCount} 份材料…` : '上传材料并智能排序（最多 5 份）'}</button>
         {sources.some((item) => item.relation === 'support') && claim.status !== 'verified' && <button className="confirm-evidence-action" type="button" onClick={onConfirmEvidence}>确认关系并完成审阅</button>}
       </>}

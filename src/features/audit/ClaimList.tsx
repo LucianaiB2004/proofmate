@@ -1,8 +1,10 @@
 import type { Claim, ClaimStatus } from '../../domain/types';
+import { cleanExtractedText } from '../onboarding/cleanExtractedText';
 
 const statusLabel: Record<ClaimStatus, string> = {
   verified: '已证实', weak: '待补证', conflict: '有冲突', missing: '缺证据',
 };
+const originLabel: Record<NonNullable<Claim['origin']>, string> = { openvino: 'OpenVINO 初审', qwen: 'Qwen 复核', human: '人工主张', demo: '示例主张' };
 
 export function ClaimList({ claims, selectedId, onSelect }: { claims: Claim[]; selectedId: string; onSelect: (id: string) => void }) {
   return (
@@ -12,7 +14,7 @@ export function ClaimList({ claims, selectedId, onSelect }: { claims: Claim[]; s
         {claims.map((claim, index) => (
           <button key={claim.id} type="button" className={`claim-item status-${claim.status} ${selectedId === claim.id ? 'is-selected' : ''}`} onClick={() => onSelect(claim.id)} aria-pressed={selectedId === claim.id}>
             <span className="claim-number">{String(index + 1).padStart(2, '0')}</span>
-            <span className="claim-statement">{claim.statement}</span>
+            <span className="claim-copy"><span className="claim-statement">{cleanExtractedText(claim.statement)}</span>{claim.origin && <small>{originLabel[claim.origin]}</small>}</span>
             <span className="status-chip">{statusLabel[claim.status]}</span>
           </button>
         ))}
