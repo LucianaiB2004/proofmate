@@ -45,7 +45,7 @@ export function cleanExtractedText(text: string): string {
 export function segmentExtractedText(text: string, source: string, evidenceId: string): SourceFragment[] {
   const cleaned = cleanExtractedText(text);
   const chunks = cleaned
-    .split(/\n\s*\n|\n(?=(?:第?[一二三四五六七八九十\d]+[.、章节]|[\u4e00-\u9fffA-Za-z].{0,24}[:：]))/)
+    .split(/\n+/)
     .map((value) => value.replace(/\s+/g, ' ').trim())
     .filter((value) => normalizeFingerprint(value).length >= 8);
   return chunks.map((value, index) => {

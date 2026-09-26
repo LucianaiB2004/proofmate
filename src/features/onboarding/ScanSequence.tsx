@@ -13,9 +13,9 @@ const demoStages = [
 export function ScanSequence({ files, demoProject = defaultDemoProject, onComplete }: { files?: File[] | null; demoProject?: ProjectAudit; onComplete: (audit: ProjectAudit) => void }) {
   const [activeStage, setActiveStage] = useState(0);
   const stages = files?.length ? [
-    { label: '材料清点仪', detail: `已接收 ${files.length} 份真实材料，原始文件不离开浏览器。`, mode: 'DEVICE' },
-    { label: '隐私检查仪', detail: '读取文本、CSV、JSON 与 PDF 正文；图片仅清点，不伪造 OCR 结果。', mode: 'PRIVATE' },
-    { label: '模型核验仪', detail: '先生成本地候选；进入档案桌后可检测 Qwen / OpenVINO。', mode: 'READY' },
+    { label: '材料清点仪', detail: `已接收 ${files.length} 份真实材料；文本型 PDF 在浏览器读取，扫描 PDF 与图片自动交给 xParse OCR。`, mode: 'DEVICE' },
+    { label: '文字提取仪', detail: '读取文本与 PDF 正文；无内嵌文字的扫描 PDF 和图片通过 xParse OCR 转成可核对文字。', mode: 'PRIVATE' },
+    { label: '模型核验仪', detail: '文件读取不是模型分析；进入档案后先运行 OpenVINO 端侧初审，再按需使用 Qwen 复核。', mode: 'READY' },
   ] : demoStages.map((stage, index) => index === 2 ? { ...stage, detail: `样例回放：构建 ${demoProject.claims.length} 条主张与 ${demoProject.evidence.length} 个证据节点。` } : stage);
 
   useEffect(() => {
