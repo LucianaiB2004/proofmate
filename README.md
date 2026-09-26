@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-打开终端显示的地址，点击“体验示例项目”，或从案例库选择公开材料练习案例。无需登录、API Key 或本地模型。若需解析图片或扫描材料，先安装官方 `xparse-cli`：
+打开终端显示的地址，点击“开始审查我的材料”上传真实文件，或从案例库选择公开材料练习案例。无需登录即可查看案例；实时云端复核和 OCR 使用用户在设置页填写的凭证。若需解析图片或扫描材料，先安装官方 `xparse-cli`：
 
 ```powershell
 npm i -g xparse-cli
@@ -35,6 +35,15 @@ pwsh -File scripts/package_submission.ps1 -VerifyOnly
 ```
 
 ## 可选 AI 能力
+
+真实材料按固定顺序形成审查闭环：
+
+1. 浏览器读取文本和文本型 PDF；图片或扫描 PDF 通过 TextIn xParse OCR 提取文字。文件提取不是模型分析。
+2. 系统清理 Markdown/HTML 控制符，并把正文整理成可定位的材料片段。
+3. OpenVINO Qwen3-4B INT4 执行第一遍端侧初审，生成带依据、风险边界和补证建议的候选主张。
+4. 用户确认候选后写入档案；重复结果会合并，不会不断追加。
+5. 百炼 Qwen 只复核尚未解决的主张及其相关证据。
+6. 每轮按新增、更新、合并、解决和剩余数量汇报变化，并从当前证据关系重新计算健康度；没有变化时明确标记为已收敛。
 
 - 百炼 Qwen：点击页面右下角“模型与 OCR 设置”，填写用户自己的 API Key；也可复制 `.env.example` 为 `.env.local`。
 - TextIn xParse：设置页可管理用户自己的 App ID 与 Secret Code。图片经本机代理交给 xParse，返回的 OCR Markdown 会继续参与主张与证据核验；默认使用 `--api auto` 免费优先路由，不会自动切换到付费模式。

@@ -13,7 +13,7 @@ it('identifies the competition and technology on first render', () => {
   expect(screen.getByText(/档案编号/)).toBeInTheDocument();
   expect(screen.getByText('作者 LucianaiB')).toBeInTheDocument();
   expect(screen.queryByText(/真源/i)).not.toBeInTheDocument();
-  expect(screen.getByRole('button', { name: '体验示例项目' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: '开始审查我的材料' })).toBeEnabled();
   expect(screen.getByRole('button', { name: '查看案例展示' })).toBeEnabled();
   expect(screen.getByRole('button', { name: '模型与 OCR 设置' })).toBeEnabled();
   expect(screen.queryByRole('button', { name: /挑战者号发射决策/ })).not.toBeInTheDocument();
@@ -37,5 +37,6 @@ it('offers to continue the last locally saved dossier', async () => {
   await userEvent.click(screen.getByRole('button', { name: '继续上次档案' }));
 
   expect(screen.getByRole('heading', { name: '我的已保存项目' })).toBeVisible();
-  expect(screen.getByLabelText('证据健康度 85 分')).toBeVisible();
+  expect(screen.getByLabelText(/证据健康度 \d+ 分/)).toBeVisible();
+  expect(screen.queryByLabelText('证据健康度 85 分')).not.toBeInTheDocument();
 });
