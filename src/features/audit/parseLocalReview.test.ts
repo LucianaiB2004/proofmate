@@ -43,4 +43,20 @@ describe('parseLocalReview', () => {
     expect(findings).toHaveLength(2);
     expect(findings[1]).toEqual({ statement: '部署记录缺少版本号', basis: '只有模型名称', risk: '环境无法复现', repair: '上传部署清单' });
   });
+
+  it('cleans Markdown and HTML and rejects markup-only findings', () => {
+    const findings = parseLocalReviews([
+      '【核心结论】',
+      '1. ## 部署记录包含模型版本号。',
+      '2. <table><tr></tr></table>',
+      '【证据依据】',
+      '- <td>模型版本：Qwen3-4B INT4</td>',
+      '【风险与边界】尚未记录哈希',
+      '【下一步补证】补充 SHA256',
+    ].join('\n'));
+
+    expect(findings).toHaveLength(1);
+    expect(findings[0].statement).toBe('部署记录包含模型版本号。');
+    expect(findings[0].basis).toBe('模型版本：Qwen3-4B INT4');
+  });
 });

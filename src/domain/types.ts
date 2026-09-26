@@ -16,6 +16,7 @@ export interface EvidenceItem {
   kind: EvidenceKind;
   excerpt: string;
   source: string;
+  locator?: string;
   sourceFingerprint?: string;
   confidence: number;
   content?: string;
@@ -34,6 +35,9 @@ export interface Claim {
   evidenceIds: string[];
   risk: string;
   repair: string;
+  fingerprint?: string;
+  origin?: 'openvino' | 'qwen' | 'human' | 'demo';
+  reviewRevision?: number;
 }
 
 export interface AuditDimensions {

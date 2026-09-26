@@ -5,7 +5,7 @@ export type LocalReview = {
   repair: string;
 };
 
-const clean = (value: string) => value.replace(/^\s*(?:\d+[.、)]\s*)?/, '').trim();
+const clean = (value: string) => cleanExtractedText(value.replace(/^\s*(?:\d+[.、)]\s*)?/, '')).replace(/(?:^|\n)\s*\d+[.、)]\s*$/gm, '').trim();
 
 const splitItems = (value: string) => {
   const numbered = value.split(/(?:^|\n)\s*\d+[.、)]\s*/).map(clean).filter(Boolean);
@@ -18,7 +18,7 @@ function sectionsOf(summary: string) {
   const labels = ['核心结论', '证据依据', '风险与边界', '下一步补证'] as const;
   return Object.fromEntries(labels.map((label) => {
     const match = summary.match(new RegExp(`【${label}】([\\s\\S]*?)(?=【(?:${labels.join('|')})】|$)`));
-    return [label, clean(match?.[1] ?? '')];
+    return [label, (match?.[1] ?? '').trim()];
   })) as Record<(typeof labels)[number], string>;
 }
 
@@ -26,10 +26,10 @@ export function parseLocalReview(summary: string): LocalReview {
   const sections = sectionsOf(summary);
 
   return {
-    statement: sections.核心结论 || clean(summary).slice(0, 180),
-    basis: sections.证据依据,
-    risk: sections.风险与边界 || '这是端侧模型发现的待核验问题，尚缺少人工确认的来源证据。',
-    repair: sections.下一步补证 || '上传能够直接支持或反驳这条主张的原始材料。',
+    statement: clean(sections.核心结论 || summary).slice(0, 180),
+    basis: clean(sections.证据依据),
+    risk: clean(sections.风险与边界) || '这是端侧模型发现的待核验问题，尚缺少人工确认的来源证据。',
+    repair: clean(sections.下一步补证) || '上传能够直接支持或反驳这条主张的原始材料。',
   };
 }
 
@@ -41,8 +41,9 @@ export function parseLocalReviews(summary: string): LocalReview[] {
   const repairs = splitItems(sections.下一步补证);
   return statements.map((statement, index) => ({
     statement,
-    basis: bases[index] ?? sections.证据依据,
-    risk: risks[index] ?? (sections.风险与边界 || '这是端侧模型发现的待核验问题，尚缺少人工确认的来源证据。'),
-    repair: repairs[index] ?? (sections.下一步补证 || '上传能够直接支持或反驳这条主张的原始材料。'),
-  }));
+    basis: bases[index] ?? clean(sections.证据依据),
+    risk: risks[index] ?? (clean(sections.风险与边界) || '这是端侧模型发现的待核验问题，尚缺少人工确认的来源证据。'),
+    repair: repairs[index] ?? (clean(sections.下一步补证) || '上传能够直接支持或反驳这条主张的原始材料。'),
+  })).filter((finding) => normalizeFingerprint(finding.statement).length >= 6);
 }
+import { cleanExtractedText, normalizeFingerprint } from '../onboarding/cleanExtractedText';
