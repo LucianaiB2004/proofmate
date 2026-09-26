@@ -5,12 +5,14 @@ import { ScanSequence } from './features/onboarding/ScanSequence';
 import { AuditDashboard } from './features/audit/AuditDashboard';
 import { demoCases } from './data/demoCases';
 import { CaseGallery } from './features/cases/CaseGallery';
+import { loadAuditDraft } from './features/persistence/auditDraft';
 
 export function App() {
   const [view, setView] = useState<'landing' | 'cases' | 'scan' | 'ready'>('landing');
   const [audit, setAudit] = useState<ProjectAudit | null>(null);
   const [files, setFiles] = useState<File[] | null>(null);
   const [selectedDemo, setSelectedDemo] = useState(demoCases[0].project);
+  const [savedAudit] = useState(loadAuditDraft);
   const finishScan = useCallback((result: ProjectAudit) => {
     setAudit(result);
     setView('ready');
@@ -40,6 +42,7 @@ export function App() {
           <div className="hero-actions">
             <button type="button" onClick={() => { setFiles(null); setSelectedDemo(demoCases[0].project); setView('scan'); }}>体验示例项目</button>
             <button className="secondary-action" type="button" onClick={() => setView('cases')}>查看案例展示</button>
+            {savedAudit && <button className="resume-action" type="button" onClick={() => { setAudit(savedAudit); setView('ready'); }}>继续上次档案</button>}
             <span>无需登录 · 可直接审阅 · 结果不替代人工判断</span>
           </div>
         </div>

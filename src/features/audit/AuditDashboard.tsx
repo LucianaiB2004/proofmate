@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { demoEvidence } from '../../data/demoProject';
 import { calculateAuditScore, getRiskCounts, linkEvidence } from '../../domain/audit';
 import type { EvidenceItem, ProjectAudit } from '../../domain/types';
@@ -12,6 +12,7 @@ import { downloadMarkdownReport } from '../export/buildReport';
 import type { QwenClaim } from '../../../server/qwenClient';
 import { extractFileText } from '../onboarding/extractFileText';
 import { parseLocalReviews } from './parseLocalReview';
+import { saveAuditDraft } from '../persistence/auditDraft';
 
 export function AuditDashboard({ initialAudit }: { initialAudit: ProjectAudit }) {
   const [audit, setAudit] = useState(initialAudit);
@@ -22,6 +23,10 @@ export function AuditDashboard({ initialAudit }: { initialAudit: ProjectAudit })
   const repaired = audit.evidence.some((item) => item.id === demoEvidence.id);
   const isDemo = !audit.id.startsWith('import-');
   const archiveNumber = `PM-${audit.id.replace(/[^a-z0-9]/gi, '').slice(0, 10).toUpperCase() || 'UNTITLED'}`;
+  const [saved, setSaved] = useState(false);
+  useEffect(() => {
+    setSaved(saveAuditDraft(audit));
+  }, [audit]);
   const repair = () => {
     setAudit((current) => linkEvidence(current, 'claim-energy', demoEvidence));
     setSelectedId('claim-energy');
@@ -134,7 +139,7 @@ export function AuditDashboard({ initialAudit }: { initialAudit: ProjectAudit })
     <main className="cockpit">
       <header className="cockpit-header">
         <div><p className="eyebrow">真源 PROOFMATE · 项目卷宗</p><h1>{audit.name}</h1><p className="dossier-number">档案编号 {archiveNumber} · 审阅日期 2026.09</p></div>
-        <div className="header-actions"><button type="button" onClick={() => downloadMarkdownReport(audit)}>导出答辩摘要</button><div className="runtime-badge"><span />{isDemo ? '演示模式' : '真实材料 · 本地抽取'}</div></div>
+        <div className="header-actions"><button type="button" onClick={() => downloadMarkdownReport(audit)}>导出答辩摘要</button>{saved && <div className="save-badge"><span aria-hidden="true">✓</span>已自动保存</div>}<div className="runtime-badge"><span />{isDemo ? '演示模式' : '真实材料 · 本地抽取'}</div></div>
       </header>
       <nav className="risk-summary" aria-label="主张状态汇总">
         <span className="verified">{counts.verified} 已证实</span><span className="weak">{counts.weak} 待补证</span><span className="conflict">{counts.conflict} 有冲突</span><span className="missing">{counts.missing} 缺证据</span>

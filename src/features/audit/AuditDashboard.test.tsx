@@ -5,6 +5,8 @@ import { AuditDashboard } from './AuditDashboard';
 import { vi } from 'vitest';
 
 describe('evidence cockpit', () => {
+  beforeEach(() => localStorage.clear());
+
   it('shows the calculated score and every claim state', () => {
     render(<AuditDashboard initialAudit={demoProject} />);
 
@@ -36,6 +38,17 @@ describe('evidence cockpit', () => {
     expect(action).toBeDisabled();
     expect(screen.getByRole('figure', { name: /与 3 条证据的关系图/ })).toHaveTextContent('30 天对照实验');
     expect(screen.getByRole('status')).toHaveTextContent('证据闭环');
+  });
+
+  it('automatically saves the reviewed dossier for a later visit', async () => {
+    render(<AuditDashboard initialAudit={demoProject} />);
+
+    await userEvent.click(screen.getByRole('button', { name: '补充 30 天对照实验' }));
+
+    expect(screen.getByText('已自动保存')).toBeVisible();
+    const saved = JSON.parse(String(localStorage.getItem('proofmate:last-audit'))) as typeof demoProject;
+    expect(saved.score).toBe(85);
+    expect(saved.evidence).toEqual(expect.arrayContaining([expect.objectContaining({ title: '30 天对照实验' })]));
   });
 
   it('adds a reviewer-confirmed OpenVINO finding as a traceable claim', async () => {
