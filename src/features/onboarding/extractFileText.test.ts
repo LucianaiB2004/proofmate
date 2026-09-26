@@ -12,7 +12,9 @@ it('delegates PDF extraction and returns its page text', async () => {
   expect(extractor).toHaveBeenCalledWith(file);
 });
 
-it('does not pretend images have readable text', async () => {
+it('delegates image extraction to xParse OCR', async () => {
   const file = new File(['pixels'], 'photo.png', { type: 'image/png' });
-  await expect(extractFileText(file)).resolves.toBe('');
+  const imageExtractor = vi.fn().mockResolvedValue('# 部署记录\n模型版本 Qwen3-4B INT4');
+  await expect(extractFileText(file, undefined, imageExtractor)).resolves.toContain('模型版本');
+  expect(imageExtractor).toHaveBeenCalledWith(file);
 });

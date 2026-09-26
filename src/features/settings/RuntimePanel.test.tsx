@@ -29,8 +29,10 @@ it('shows structured Qwen output instead of discarding it', async () => {
   })));
   render(<RuntimePanel text="测试材料" />);
   await userEvent.click(screen.getByRole('button', { name: '检测并分析当前材料' }));
-  expect(await screen.findByText(/试点节能 18%｜风险：周期过短/)).toBeVisible();
-  expect(screen.getByText(/来源：report.pdf · P3/)).toBeVisible();
+  expect(await screen.findByText(/【结论】试点节能 18%/)).toBeVisible();
+  expect(screen.getByText(/【依据】report.pdf · P3/)).toBeVisible();
+  expect(screen.getByText(/【风险边界】周期过短/)).toBeVisible();
+  expect(screen.getByText(/【下一步】补充对照实验/)).toBeVisible();
   vi.unstubAllGlobals();
 });
 

@@ -20,6 +20,8 @@ describe('Qwen server adapter', () => {
     expect(result).toEqual({ state: 'provider_ready', claims: [{ statement: '节能 31%', risk: '样本周期短', repair: '补充30天对照实验', source: '研究报告.pdf · P12', excerpt: '7天节能31%' }] });
     expect(JSON.stringify(result)).not.toContain('server-only');
     expect((fetchImpl.mock.calls[0][1] as RequestInit).body).toContain('json');
+    const request = JSON.parse(String((fetchImpl.mock.calls[0][1] as RequestInit).body));
+    expect(request.messages[0].content).toMatch(/结论层.*依据层.*风险边界.*下一步/s);
   });
 
   it('drops incomplete findings instead of inventing traceability fields', async () => {

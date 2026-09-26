@@ -39,7 +39,7 @@ export function RuntimePanel({ text, isDemo = false, onAcceptLocalInsight, onAcc
         setQwenFindings(result.claims);
         setQwenAccepted(false);
         setLocalInsight('');
-        setInsights(result.claims.map((claim: QwenClaim) => `${claim.statement}｜风险：${claim.risk}\n来源：${claim.source}\n原文：${claim.excerpt}\n补证：${claim.repair}`));
+        setInsights(result.claims.map((claim: QwenClaim) => `【结论】${claim.statement}\n【依据】${claim.source}｜${claim.excerpt}\n【风险边界】${claim.risk}\n【下一步】${claim.repair}`));
       } else setCloud(result.state === 'provider_not_configured' ? '百炼 Qwen · 未配置 API Key' : `百炼 Qwen · ${result.state}`);
     } catch { setCloud('百炼 Qwen · 服务连接失败'); } finally { setBusy(false); }
   };

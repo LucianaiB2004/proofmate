@@ -9,10 +9,18 @@ it('builds an audit from the actual selected text file', async () => {
   expect(audit.trace[0].detail).toContain('1 份');
 });
 
-it('labels binary-only input without pretending to read its contents', async () => {
+it('labels a failed image OCR without pretending to read its contents', async () => {
   const audit = await buildImportedAudit([new File(['binary'], 'photo.png', { type: 'image/png' })]);
   expect(audit.claims[0].statement).toContain('待模型解析');
-  expect(audit.trace.some((item) => item.detail.includes('未执行 OCR'))).toBe(true);
+  expect(audit.evidence[0].excerpt).toContain('xParse OCR 解析失败');
+  expect(audit.trace.some((item) => item.detail.includes('photo.png'))).toBe(true);
+});
+
+it('records successful xParse OCR as a traceable image source', async () => {
+  const file = new File(['pixels'], 'deployment.png', { type: 'image/png' });
+  const audit = await buildImportedAudit([file], async () => '部署记录显示模型版本 Qwen3-4B INT4。');
+  expect(audit.claims[0].statement).toContain('模型版本');
+  expect(audit.trace.some((item) => item.detail.includes('TextIn xParse OCR'))).toBe(true);
 });
 
 it('preserves a PDF extraction error instead of calling it model work', async () => {

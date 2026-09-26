@@ -9,7 +9,11 @@ npm install
 npm run dev
 ```
 
-打开终端显示的地址，点击“体验示例项目”，或从案例库选择公开材料练习案例。无需登录、API Key 或本地模型。
+打开终端显示的地址，点击“体验示例项目”，或从案例库选择公开材料练习案例。无需登录、API Key 或本地模型。若需解析图片或扫描材料，先安装官方 `xparse-cli`：
+
+```powershell
+npm i -g xparse-cli
+```
 
 ## 案例库
 
@@ -32,14 +36,15 @@ pwsh -File scripts/package_submission.ps1 -VerifyOnly
 
 ## 可选 AI 能力
 
-- 百炼 Qwen：复制 `.env.example` 为 `.env.local`，填写 `DASHSCOPE_API_KEY`。
+- 百炼 Qwen：点击页面右下角“模型与 OCR 设置”，填写用户自己的 API Key；也可复制 `.env.example` 为 `.env.local`。
+- TextIn xParse：设置页可管理用户自己的 App ID 与 Secret Code。图片经本机代理交给 xParse，返回的 OCR Markdown 会继续参与主张与证据核验；默认使用 `--api auto` 免费优先路由，不会自动切换到付费模式。
 - OpenVINO：参见 [`local-ai/README.md`](local-ai/README.md)，推荐 Qwen3-4B INT4、CPU 设备。
 - PDF：正文在浏览器内由 PDF.js 解析，原始文件无需上传。
 
 ## 项目结构
 
 - `src/`：Web 产品与证据领域逻辑；
-- `server/`：百炼 Qwen 安全代理；
+- `server/`：百炼 Qwen、TextIn xParse 与本机凭证安全代理；
 - `local-ai/`：OpenVINO 本地推理服务；
 - `tests/e2e/`：Chrome 主流程与移动端测试；
 - `submission/`：封面、报名文案、演示脚本和 AI 实践佐证。

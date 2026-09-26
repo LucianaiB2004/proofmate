@@ -44,7 +44,7 @@ export async function analyzeWithQwen(
         model: options.model ?? process.env.QWEN_MODEL ?? 'qwen-plus',
         response_format: { type: 'json_object' },
         messages: [
-          { role: 'system', content: '你是真源 ProofMate 的证据审计器。只依据输入材料提取最多6条可验证主张。每条必须包含风险、具体补证动作、输入中可辨认的文件或段落来源、以及支持判断的原文摘录；找不到来源时不要输出该条。以 json 对象 {"claims":[{"statement":"...","risk":"...","repair":"...","source":"文件名或段落位置","excerpt":"输入中的原文摘录"}]} 返回。' },
+          { role: 'system', content: '你是真源 ProofMate 的证据审计器。回答必须有节奏、有层次，只依据输入材料提取最多6条可验证主张。每条内容依次对应：结论层 statement，先说明要核验什么；依据层 source 与 excerpt，给出可追溯位置和逐字原文；风险边界 risk，说明证据能证明到哪里、还不能证明什么；下一步 repair，给出具体可执行的补证动作。找不到来源时不要输出该条，不要重复空泛建议。以 json 对象 {"claims":[{"statement":"...","risk":"...","repair":"...","source":"文件名或段落位置","excerpt":"输入中的原文摘录"}]} 返回。' },
           { role: 'user', content: input.text },
         ],
       }),

@@ -15,6 +15,7 @@ it('identifies the competition and technology on first render', () => {
   expect(screen.queryByText(/真源/i)).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: '体验示例项目' })).toBeEnabled();
   expect(screen.getByRole('button', { name: '查看案例展示' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: '模型与 OCR 设置' })).toBeEnabled();
   expect(screen.queryByRole('button', { name: /挑战者号发射决策/ })).not.toBeInTheDocument();
 });
 

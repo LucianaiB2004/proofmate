@@ -6,6 +6,7 @@ import { AuditDashboard } from './features/audit/AuditDashboard';
 import { demoCases } from './data/demoCases';
 import { CaseGallery } from './features/cases/CaseGallery';
 import { loadAuditDraft } from './features/persistence/auditDraft';
+import { ProviderSettings } from './features/settings/ProviderSettings';
 
 export function App() {
   const [view, setView] = useState<'landing' | 'cases' | 'scan' | 'ready'>('landing');
@@ -13,22 +14,17 @@ export function App() {
   const [files, setFiles] = useState<File[] | null>(null);
   const [selectedDemo, setSelectedDemo] = useState(demoCases[0].project);
   const [savedAudit] = useState(loadAuditDraft);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const finishScan = useCallback((result: ProjectAudit) => {
     setAudit(result);
     setView('ready');
   }, []);
 
-  if (view === 'scan') return <ScanSequence files={files} demoProject={selectedDemo} onComplete={finishScan} />;
-
-  if (view === 'ready' && audit) {
-    return <AuditDashboard initialAudit={audit} />;
-  }
-
-  if (view === 'cases') {
-    return <CaseGallery cases={demoCases} onBack={() => setView('landing')} onSelect={(item) => { setFiles(null); setSelectedDemo(item.project); setView('scan'); }} />;
-  }
-
-  return (
+  let content;
+  if (view === 'scan') content = <ScanSequence files={files} demoProject={selectedDemo} onComplete={finishScan} />;
+  else if (view === 'ready' && audit) content = <AuditDashboard initialAudit={audit} />;
+  else if (view === 'cases') content = <CaseGallery cases={demoCases} onBack={() => setView('landing')} onSelect={(item) => { setFiles(null); setSelectedDemo(item.project); setView('scan'); }} />;
+  else content = (
     <main className="landing-shell">
       <section className="archive-cover" aria-labelledby="hero-title">
         <div className="archive-intro">
@@ -60,4 +56,5 @@ export function App() {
       </section>
     </main>
   );
+  return <>{content}<button className="settings-launch" type="button" onClick={() => setSettingsOpen(true)}>模型与 OCR 设置</button>{settingsOpen && <ProviderSettings onClose={() => setSettingsOpen(false)} />}</>;
 }
