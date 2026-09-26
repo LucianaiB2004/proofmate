@@ -55,7 +55,7 @@ export function mergeReviewRound(
     const relation = excerpt ? requestedRelation : 'unreviewed';
     const candidateEvidence: EvidenceItem = {
       id: `evidence-${stableId(`${rawFinding.sourceFingerprint || source}|${rawFinding.locator || ''}|${normalizeFingerprint(excerpt || statement)}`)}`,
-      title: rawFinding.locator ? `${source} · ${rawFinding.locator}` : source,
+      title: relation === 'unreviewed' && options.origin === 'openvino' ? 'OpenVINO 定位依据' : rawFinding.locator ? `${source} · ${rawFinding.locator}` : source,
       kind: 'document',
       excerpt: excerpt || '模型给出了待核验提示，但没有返回可定位的原文摘录。',
       source,
@@ -63,7 +63,7 @@ export function mergeReviewRound(
       sourceFingerprint: rawFinding.sourceFingerprint,
       confidence: relation === 'unreviewed' ? Math.min(rawFinding.confidence ?? 0.35, 0.45) : rawFinding.confidence ?? 0.72,
       relation,
-      reason: relation === 'unreviewed' ? '这是模型定位提示，不计作有效支持证据。' : undefined,
+      reason: relation === 'unreviewed' ? '为什么仍然缺证：这是模型给出的定位提示，不是来源证据，因此不计作有效支持证据。' : undefined,
     };
     const key = evidenceKey({ ...candidateEvidence, locator: rawFinding.locator });
     let linkedEvidence = evidence.find((item) => evidenceKey(item) === key);

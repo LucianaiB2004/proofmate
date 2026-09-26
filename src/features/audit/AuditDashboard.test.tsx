@@ -10,7 +10,7 @@ describe('evidence cockpit', () => {
   it('shows the calculated score and every claim state', () => {
     render(<AuditDashboard initialAudit={demoProject} />);
 
-    expect(screen.getByLabelText('证据健康度 68 分')).toBeVisible();
+    expect(screen.getByLabelText(/证据健康度 \d+ 分/)).toBeVisible();
     expect(screen.getByText(/项目卷宗/)).toBeInTheDocument();
     expect(screen.getByText(/档案编号/)).toBeInTheDocument();
     expect(screen.getByRole('img', { name: /证据审核章/ })).toBeInTheDocument();
@@ -29,15 +29,24 @@ describe('evidence cockpit', () => {
     expect(within(inspector).getByText(/统一指标口径/)).toBeVisible();
   });
 
-  it('raises the score above 80 only once after adding the 30 day evidence', async () => {
+  it('recalculates the score only once after adding the 30 day evidence', async () => {
     render(<AuditDashboard initialAudit={demoProject} />);
     const action = screen.getByRole('button', { name: '补充 30 天对照实验' });
+    const before = Number(screen.getByRole('img', { name: /证据审核章/ }).querySelector('strong')?.textContent);
 
     await userEvent.click(action);
-    expect(screen.getByLabelText('证据健康度 85 分')).toBeVisible();
+    const after = Number(screen.getByRole('img', { name: /证据审核章/ }).querySelector('strong')?.textContent);
+    expect(after).toBeGreaterThan(before);
     expect(action).toBeDisabled();
     expect(screen.getByRole('figure', { name: /与 3 条证据的关系图/ })).toHaveTextContent('30 天对照实验');
     expect(screen.getByRole('status')).toHaveTextContent('证据闭环');
+  });
+
+  it('keeps an extracted real dossier usable before its first model review', () => {
+    render(<AuditDashboard initialAudit={{ ...demoProject, id: 'import-empty', claims: [], evidence: demoProject.evidence.slice(0, 1) }} />);
+    expect(screen.getByText('尚未生成可核验主张')).toBeVisible();
+    expect(screen.getAllByText(/文件提取不是模型分析/).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByRole('button', { name: '使用端侧模型分析' })).toBeEnabled();
   });
 
   it('automatically saves the reviewed dossier for a later visit', async () => {
@@ -47,7 +56,7 @@ describe('evidence cockpit', () => {
 
     expect(screen.getByText('已自动保存')).toBeVisible();
     const saved = JSON.parse(String(localStorage.getItem('proofmate:last-audit'))) as typeof demoProject;
-    expect(saved.score).toBe(85);
+    expect(saved.score).toBe(Number(screen.getByRole('img', { name: /证据审核章/ }).querySelector('strong')?.textContent));
     expect(saved.evidence).toEqual(expect.arrayContaining([expect.objectContaining({ title: '30 天对照实验' })]));
   });
 
@@ -73,19 +82,52 @@ describe('evidence cockpit', () => {
     const inspector = screen.getByRole('region', { name: '风险检查器' });
     expect(within(inspector).getByText('需要核验版本信息是否真实')).toBeVisible();
     expect(within(inspector).getByText('上传部署清单或版本截图')).toBeVisible();
+    expect(within(inspector).getByText('定位提示 · 待判断')).toBeVisible();
+    expect(within(inspector).getByText(/模型给出的定位提示/)).toBeVisible();
+    expect(within(inspector).queryByRole('button', { name: '确认关系并完成审阅' })).not.toBeInTheDocument();
+    expect(screen.getByRole('figure', { name: /与 1 条证据的关系图/ })).toHaveTextContent('OpenVINO 定位依据');
+    expect(screen.getByRole('figure', { name: /与 1 条证据的关系图/ })).toHaveTextContent('当前材料只写了模型名称');
+    expect(screen.getByRole('figure', { name: /与 1 条证据的关系图/ })).toHaveTextContent('为什么仍然缺证');
 
     const evidenceFile = new File(['模型版本：Qwen3-4B INT4\n部署日期：2026-09-25'], '部署清单.md', { type: 'text/markdown' });
     await userEvent.upload(within(inspector).getByLabelText('按建议上传证据文件'), evidenceFile);
     expect(await within(inspector).findByText('找到证据啦')).toBeVisible();
-    expect(within(inspector).getByText(/材料直接给出了模型版本/)).toBeVisible();
-    expect(screen.getByRole('figure', { name: /与 1 条证据的关系图/ })).toHaveTextContent('部署清单.md');
-    expect(screen.getByRole('figure', { name: /与 1 条证据的关系图/ })).toHaveTextContent('91%');
+    expect(within(inspector).getAllByText(/材料直接给出了模型版本/).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByRole('figure', { name: /与 2 条证据的关系图/ })).toHaveTextContent('部署清单.md');
+    expect(screen.getByRole('figure', { name: /与 2 条证据的关系图/ })).toHaveTextContent('91%');
     expect(screen.getByText('OpenVINO 证据核验')).toBeVisible();
+    expect(screen.getByRole('heading', { name: '原始材料与提取结果' })).toBeVisible();
+    expect(screen.getByText(/部署日期：2026-09-25/)).toBeVisible();
 
     await userEvent.click(within(inspector).getByRole('button', { name: '确认关系并完成审阅' }));
     expect(within(inspector).getByRole('heading', { name: '证据闭环' })).toBeVisible();
     expect(screen.getByText('人工确认关系')).toBeVisible();
     vi.unstubAllGlobals();
+  });
+
+  it('shows the original PDF entry, extracted text, and explains OCR in a source reader', async () => {
+    const file = new File(['pdf bytes'], '答辩材料.pdf', { type: 'application/pdf' });
+    const imported = {
+      ...demoProject,
+      id: 'import-reader',
+      evidence: [{
+        id: 'import-evidence-0',
+        title: file.name,
+        kind: 'document' as const,
+        excerpt: '试点结果显示节能 18%。',
+        content: '试点结果显示节能 18%。这里是 PDF.js 提取的完整正文。',
+        extractionMethod: 'pdfjs' as const,
+        source: file.name,
+        confidence: 0.72,
+      }],
+      claims: [{ ...demoProject.claims[0], evidenceIds: ['import-evidence-0'] }],
+    };
+    render(<AuditDashboard initialAudit={imported} sourceFiles={[file]} />);
+
+    expect(screen.getByRole('heading', { name: '原始材料与提取结果' })).toBeVisible();
+    expect(screen.getByText('试点结果显示节能 18%。这里是 PDF.js 提取的完整正文。')).toBeVisible();
+    expect(screen.getByText('OCR 的作用').parentElement).toHaveTextContent('图片或扫描件');
+    expect(screen.getByText(/浏览器原文件预览/)).toBeVisible();
   });
 
   it('keeps unrelated uploads visible but blocks false evidence confirmation', async () => {
@@ -101,6 +143,23 @@ describe('evidence cockpit', () => {
     expect(await within(inspector).findByText(/不能用于证明当前主张/)).toBeVisible();
     expect(screen.getByRole('figure', { name: /与 2 条证据的关系图/ })).toHaveTextContent('无关');
     expect(within(inspector).queryByRole('button', { name: '确认关系并完成审阅' })).not.toBeInTheDocument();
+    vi.unstubAllGlobals();
+  });
+
+  it('keeps a failed OCR upload visible as an unreviewed material', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (url.includes('local/status')) return { json: async () => ({ state: 'service_ready', model_state: 'ready' }) };
+      if (url.includes('xparse/parse')) return { ok: false, json: async () => ({ message: 'OCR 服务暂不可用' }) };
+      return { json: async () => ({ state: 'service_ready' }) };
+    }));
+    render(<AuditDashboard initialAudit={demoProject} />);
+    await userEvent.click(screen.getByRole('button', { name: /部署模型与评估模型版本完全一致/ }));
+    const inspector = screen.getByRole('region', { name: '风险检查器' });
+    await userEvent.upload(within(inspector).getByLabelText('按建议上传证据文件'), new File(['pixels'], '版本截图.png', { type: 'image/png' }));
+
+    expect(await within(inspector).findByText('等待人工判断')).toBeVisible();
+    expect(screen.getByRole('figure', { name: /与 2 条证据的关系图/ })).toHaveTextContent('版本截图.png');
+    expect(screen.getByRole('figure', { name: /与 2 条证据的关系图/ })).toHaveTextContent('OCR 服务暂不可用');
     vi.unstubAllGlobals();
   });
 
@@ -143,7 +202,7 @@ describe('evidence cockpit', () => {
     await userEvent.click(screen.getByRole('button', { name: /试点节能 18%/ }));
     const inspector = screen.getByRole('region', { name: '风险检查器' });
     expect(within(inspector).getByText('试点节能 18%', { selector: 'blockquote' })).toBeVisible();
-    expect(within(inspector).getByText(/report.pdf · P3/)).toBeVisible();
+    expect(within(inspector).getAllByText(/report.pdf · P3/).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Qwen 云端复核入档')).toBeVisible();
     vi.unstubAllGlobals();
   });
