@@ -22,3 +22,8 @@ export function loadAuditDraft(): ProjectAudit | null {
     return null;
   }
 }
+
+export function clearAuditDraft() {
+  try { localStorage.removeItem(auditDraftKey); return true; }
+  catch { return false; }
+}

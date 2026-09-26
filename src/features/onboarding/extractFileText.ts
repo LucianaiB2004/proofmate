@@ -1,5 +1,15 @@
 type PdfExtractor = (file: File) => Promise<string>;
 type ImageExtractor = (file: File) => Promise<string>;
+export type ExtractionMethod = 'browser-text' | 'pdfjs' | 'xparse-ocr' | 'none';
+export type ExtractedFile = { text: string; method: ExtractionMethod };
+
+export class ExtractionFailure extends Error {
+  constructor(public method: ExtractionMethod, message: string) { super(message); }
+}
+
+export function sourceFileFingerprint(file: File) {
+  return [file.name, file.size, file.lastModified, file.type].join(':');
+}
 
 const directTextExtensions = new Set(['md', 'txt', 'csv', 'json']);
 const imageExtensions = new Set(['png', 'jpg', 'jpeg', 'webp']);
@@ -27,10 +37,32 @@ async function extractImage(file: File): Promise<string> {
   return result.text;
 }
 
-export async function extractFileText(file: File, pdfExtractor: PdfExtractor = extractPdf, imageExtractor: ImageExtractor = extractImage): Promise<string> {
+export function defaultExtractionMethod(file: File): ExtractionMethod {
   const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
-  if (directTextExtensions.has(extension)) return file.text();
-  if (extension === 'pdf') return pdfExtractor(file);
-  if (imageExtensions.has(extension)) return imageExtractor(file);
-  return '';
+  if (directTextExtensions.has(extension)) return 'browser-text';
+  if (extension === 'pdf') return 'pdfjs';
+  if (imageExtensions.has(extension)) return 'xparse-ocr';
+  return 'none';
+}
+
+export async function extractFile(file: File, pdfExtractor: PdfExtractor = extractPdf, imageExtractor: ImageExtractor = extractImage): Promise<ExtractedFile> {
+  const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
+  if (directTextExtensions.has(extension)) return { text: await file.text(), method: 'browser-text' };
+  if (extension === 'pdf') {
+    let text = '';
+    try { text = await pdfExtractor(file); }
+    catch (error) { throw new ExtractionFailure('pdfjs', error instanceof Error ? error.message : 'PDF 正文读取失败'); }
+    if (text.replace(/\s+/g, '').length >= 8) return { text, method: 'pdfjs' };
+    try { return { text: await imageExtractor(file), method: 'xparse-ocr' }; }
+    catch (error) { throw new ExtractionFailure('xparse-ocr', error instanceof Error ? error.message : '扫描 PDF OCR 失败'); }
+  }
+  if (imageExtensions.has(extension)) {
+    try { return { text: await imageExtractor(file), method: 'xparse-ocr' }; }
+    catch (error) { throw new ExtractionFailure('xparse-ocr', error instanceof Error ? error.message : '图片 OCR 失败'); }
+  }
+  return { text: '', method: 'none' };
+}
+
+export async function extractFileText(file: File, pdfExtractor: PdfExtractor = extractPdf, imageExtractor: ImageExtractor = extractImage): Promise<string> {
+  return (await extractFile(file, pdfExtractor, imageExtractor)).text;
 }

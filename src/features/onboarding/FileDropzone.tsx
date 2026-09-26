@@ -1,11 +1,12 @@
-import { useId, useState } from 'react';
+import { useId, useState, type RefObject } from 'react';
 import { validateFiles } from './importFiles';
 
 interface FileDropzoneProps {
   onFilesAccepted: (files: File[]) => void;
+  inputRef?: RefObject<HTMLInputElement | null>;
 }
 
-export function FileDropzone({ onFilesAccepted }: FileDropzoneProps) {
+export function FileDropzone({ onFilesAccepted, inputRef }: FileDropzoneProps) {
   const id = useId();
   const [message, setMessage] = useState('支持 PDF、文档、数据与图片，单个文件不超过 10MB');
   const [acceptedNames, setAcceptedNames] = useState<string[]>([]);
@@ -25,8 +26,9 @@ export function FileDropzone({ onFilesAccepted }: FileDropzoneProps) {
     <div className="dropzone">
       <span className="dropzone-mark" aria-hidden="true">＋</span>
       <label htmlFor={id}>拖入你的项目材料</label>
-      <input id={id} type="file" multiple accept=".pdf,.md,.txt,.csv,.json,.png,.jpg,.jpeg,.webp" onChange={(event) => handleFiles(event.target.files)} />
+      <input ref={inputRef} id={id} type="file" multiple accept=".pdf,.md,.txt,.csv,.json,.png,.jpg,.jpeg,.webp" onChange={(event) => handleFiles(event.target.files)} />
       <p aria-live="polite">{message}</p>
+      <small className="dropzone-processing-note">文本 PDF 在浏览器读取；图片和扫描 PDF 自动使用 TextIn OCR。</small>
       {acceptedNames.length > 0 && <ul className="accepted-materials" data-testid="accepted-materials">{acceptedNames.map((name) => <li key={name}>{name}</li>)}</ul>}
     </div>
   );

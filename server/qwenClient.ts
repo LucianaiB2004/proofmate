@@ -34,7 +34,7 @@ export async function analyzeWithQwen(
   if (!apiKey) return { state: 'provider_not_configured' };
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? 20_000);
+  const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? 60_000);
   try {
     const response = await fetchImpl('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', {
       method: 'POST',
@@ -44,7 +44,7 @@ export async function analyzeWithQwen(
         model: options.model ?? process.env.QWEN_MODEL ?? 'qwen-plus',
         response_format: { type: 'json_object' },
         messages: [
-          { role: 'system', content: '你是真源 ProofMate 的证据审计器。回答必须有节奏、有层次，只依据输入材料提取最多6条可验证主张。每条内容依次对应：结论层 statement，先说明要核验什么；依据层 source 与 excerpt，给出可追溯位置和逐字原文；风险边界 risk，说明证据能证明到哪里、还不能证明什么；下一步 repair，给出具体可执行的补证动作。找不到来源时不要输出该条，不要重复空泛建议。以 json 对象 {"claims":[{"statement":"...","risk":"...","repair":"...","source":"文件名或段落位置","excerpt":"输入中的原文摘录"}]} 返回。' },
+          { role: 'system', content: '你是真源 ProofMate 的证据审计器。回答必须有节奏、有层次，只依据输入材料中明确写出的肯定性结论提取最多6条可验证主张。不要把“没有说明某事”改写成“某事未发生”，不要新增隐含主张或因果结论。每条内容依次对应：结论层 statement，先说明要核验什么；依据层 source 与 excerpt，给出可追溯位置和逐字原文；风险边界 risk，说明证据能证明到哪里、还不能证明什么；下一步 repair，给出具体可执行的补证动作。repair 只能要求材料、字段、时间范围或验证方法，不得虚构输入中未出现的标准名称、规范编号、机构要求或数据来源。找不到来源时不要输出该条，不要重复空泛建议。以 json 对象 {"claims":[{"statement":"...","risk":"...","repair":"...","source":"文件名或段落位置","excerpt":"输入中的原文摘录"}]} 返回。' },
           { role: 'user', content: input.text },
         ],
       }),

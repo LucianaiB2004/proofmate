@@ -6,7 +6,11 @@ import { promisify } from 'node:util';
 import type { ProviderSecrets } from './providerSettings.ts';
 
 const exec = promisify(execFile);
-const imageExtensions = new Set(['png', 'jpg', 'jpeg', 'webp', 'bmp', 'tif', 'tiff']);
+const supportedExtensions = new Set(['pdf', 'png', 'jpg', 'jpeg', 'webp', 'bmp', 'tif', 'tiff']);
+
+export function isXParseSupported(name: string) {
+  return supportedExtensions.has(name.split('.').pop()?.toLowerCase() ?? '');
+}
 
 export function getXParseInvocation(platform = process.platform) {
   return platform === 'win32' ? { command: 'xparse-cli.cmd', shell: true } : { command: 'xparse-cli', shell: false };
@@ -14,7 +18,7 @@ export function getXParseInvocation(platform = process.platform) {
 
 export async function parseImageWithXParse(name: string, base64: string, secrets: ProviderSecrets) {
   const extension = name.split('.').pop()?.toLowerCase() ?? '';
-  if (!imageExtensions.has(extension)) throw new Error('unsupported_image');
+  if (!isXParseSupported(name)) throw new Error('unsupported_document');
   const workspace = await mkdtemp(path.join(os.tmpdir(), 'proofmate-xparse-'));
   const input = path.join(workspace, `input.${extension}`);
   const output = path.join(workspace, 'result');

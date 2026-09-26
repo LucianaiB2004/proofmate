@@ -17,11 +17,14 @@ it('replays the sample scan and returns the prepared audit', async () => {
   vi.useRealTimers();
 });
 
-it('starts the sample scan from the landing page', async () => {
+it('opens the real material picker from the primary landing action', async () => {
   const { App } = await import('../../App');
   render(<App />);
-  await userEvent.click(screen.getByRole('button', { name: '体验示例项目' }));
-  expect(screen.getByRole('heading', { name: '正在重建项目的证据链' })).toBeVisible();
+  const input = screen.getByLabelText('拖入你的项目材料');
+  const click = vi.spyOn(input, 'click');
+  await userEvent.click(screen.getByRole('button', { name: '开始审查我的材料' }));
+  expect(click).toHaveBeenCalledOnce();
+  expect(screen.getByRole('button', { name: '查看案例展示' })).toBeVisible();
 });
 
 it('labels imported material as a real local review', () => {
@@ -30,7 +33,7 @@ it('labels imported material as a real local review', () => {
 
   expect(screen.getByText('真实材料 · LOCAL FIRST')).toBeVisible();
   expect(screen.getByText('材料清点仪')).toBeVisible();
-  expect(screen.getByText('隐私检查仪')).toBeVisible();
+  expect(screen.getByText('文字提取仪')).toBeVisible();
   expect(screen.getByText('模型核验仪')).toBeVisible();
   expect(screen.getByText(/已接收 1 份真实材料/)).toBeVisible();
   vi.useRealTimers();
@@ -46,4 +49,21 @@ it('keeps a long imported filename available to people and layout checks', async
 
   expect(screen.getByTestId('accepted-materials')).toHaveTextContent(filename);
   expect(onFilesAccepted).toHaveBeenCalledOnce();
+});
+
+it('accepts a PDF immediately without an extra OCR consent control', async () => {
+  const onFilesAccepted = vi.fn();
+  render(<FileDropzone onFilesAccepted={onFilesAccepted} />);
+  await userEvent.upload(screen.getByLabelText('拖入你的项目材料'), new File(['scan'], 'scan.pdf', { type: 'application/pdf' }));
+  expect(onFilesAccepted).toHaveBeenCalledWith([expect.objectContaining({ name: 'scan.pdf' })]);
+  expect(screen.getByText('已选择 1 个文件')).toBeVisible();
+  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+});
+
+it('accepts an image immediately and lets the extraction pipeline use OCR', async () => {
+  const onFilesAccepted = vi.fn();
+  render(<FileDropzone onFilesAccepted={onFilesAccepted} />);
+  await userEvent.upload(screen.getByLabelText('拖入你的项目材料'), new File(['pixels'], 'scan.png', { type: 'image/png' }));
+  expect(onFilesAccepted).toHaveBeenCalledWith([expect.objectContaining({ name: 'scan.png' })]);
+  expect(screen.getByText('已选择 1 个文件')).toBeVisible();
 });

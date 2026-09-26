@@ -22,6 +22,8 @@ describe('Qwen server adapter', () => {
     expect((fetchImpl.mock.calls[0][1] as RequestInit).body).toContain('json');
     const request = JSON.parse(String((fetchImpl.mock.calls[0][1] as RequestInit).body));
     expect(request.messages[0].content).toMatch(/结论层.*依据层.*风险边界.*下一步/s);
+    expect(request.messages[0].content).toMatch(/不得虚构.*标准名称/);
+    expect(request.messages[0].content).toMatch(/不要把“没有说明某事”改写成“某事未发生”/);
   });
 
   it('drops incomplete findings instead of inventing traceability fields', async () => {

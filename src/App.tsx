@@ -1,11 +1,11 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import type { ProjectAudit } from './domain/types';
 import { FileDropzone } from './features/onboarding/FileDropzone';
 import { ScanSequence } from './features/onboarding/ScanSequence';
 import { AuditDashboard } from './features/audit/AuditDashboard';
 import { demoCases } from './data/demoCases';
 import { CaseGallery } from './features/cases/CaseGallery';
-import { loadAuditDraft } from './features/persistence/auditDraft';
+import { clearAuditDraft, loadAuditDraft } from './features/persistence/auditDraft';
 import { ProviderSettings } from './features/settings/ProviderSettings';
 
 export function App() {
@@ -13,8 +13,9 @@ export function App() {
   const [audit, setAudit] = useState<ProjectAudit | null>(null);
   const [files, setFiles] = useState<File[] | null>(null);
   const [selectedDemo, setSelectedDemo] = useState(demoCases[0].project);
-  const [savedAudit] = useState(loadAuditDraft);
+  const [savedAudit, setSavedAudit] = useState(loadAuditDraft);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const materialInputRef = useRef<HTMLInputElement>(null);
   const finishScan = useCallback((result: ProjectAudit) => {
     setAudit(result);
     setView('ready');
@@ -22,7 +23,7 @@ export function App() {
 
   let content;
   if (view === 'scan') content = <ScanSequence files={files} demoProject={selectedDemo} onComplete={finishScan} />;
-  else if (view === 'ready' && audit) content = <AuditDashboard initialAudit={audit} />;
+  else if (view === 'ready' && audit) content = <AuditDashboard initialAudit={audit} sourceFiles={files ?? undefined} />;
   else if (view === 'cases') content = <CaseGallery cases={demoCases} onBack={() => setView('landing')} onSelect={(item) => { setFiles(null); setSelectedDemo(item.project); setView('scan'); }} />;
   else content = (
     <main className="landing-shell">
@@ -36,10 +37,11 @@ export function App() {
           <p className="plain-promise">你把答辩材料给我，我帮你找出里面站不住脚的结论和缺少的证据。</p>
           <p className="hero-copy">把论文、代码、数据和截图整理成可追溯的证据档案。AI 发现关系，人审阅并盖章确认。</p>
           <div className="hero-actions">
-            <button type="button" onClick={() => { setFiles(null); setSelectedDemo(demoCases[0].project); setView('scan'); }}>体验示例项目</button>
+            <button type="button" onClick={() => materialInputRef.current?.click()}>开始审查我的材料</button>
             <button className="secondary-action" type="button" onClick={() => setView('cases')}>查看案例展示</button>
-            {savedAudit && <button className="resume-action" type="button" onClick={() => { setAudit(savedAudit); setView('ready'); }}>继续上次档案</button>}
+            {savedAudit && <><button className="resume-action" type="button" onClick={() => { setAudit(savedAudit); setView('ready'); }}>继续上次档案</button><button className="secondary-action" type="button" onClick={() => { if (clearAuditDraft()) setSavedAudit(null); }}>清除本机档案</button></>}
             <span>无需登录 · 可直接审阅 · 结果不替代人工判断</span>
+            <small>自动保存会在此浏览器保留提取正文与分析结果，不保存原文件；可随时清除。</small>
           </div>
         </div>
         <aside className="archive-intake" aria-labelledby="intake-title">
@@ -47,7 +49,7 @@ export function App() {
           <p className="folder-tab">RESEARCH MATERIAL / 01</p>
           <h2 id="intake-title">材料投递口</h2>
           <p>把答辩材料装进这只档案袋，我们会先清点，再查隐私，最后核验证据关系。</p>
-          <FileDropzone onFilesAccepted={(accepted) => { setFiles(accepted); setView('scan'); }} />
+          <FileDropzone inputRef={materialInputRef} onFilesAccepted={(accepted) => { setFiles(accepted); setView('scan'); }} />
           <dl className="intake-notes">
             <div><dt>支持</dt><dd>PDF / MD / TXT / CSV / JSON / 图片</dd></div>
             <div><dt>处理</dt><dd>优先在浏览器与端侧完成</dd></div>
