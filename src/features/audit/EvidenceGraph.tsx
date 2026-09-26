@@ -5,7 +5,11 @@ const kindLabel: Record<EvidenceItem['kind'], string> = {
 };
 
 export function EvidenceGraph({ claim, evidence }: { claim: Claim; evidence: EvidenceItem[] }) {
-  const linked = evidence.filter((item) => claim.evidenceIds.includes(item.id));
+  const relationRank = { support: 0, conflict: 1, unreviewed: 2, unrelated: 3 };
+  const linked = evidence
+    .filter((item) => claim.evidenceIds.includes(item.id))
+    .slice()
+    .sort((left, right) => relationRank[left.relation ?? 'support'] - relationRank[right.relation ?? 'support'] || right.confidence - left.confidence);
   const label = `${claim.statement} 与 ${linked.length} 条证据的关系图`;
   return (
     <section className="graph-panel" aria-labelledby="graph-title">

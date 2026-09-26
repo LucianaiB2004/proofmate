@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { demoEvidence } from '../../data/demoProject';
 import { calculateAuditScore, getRiskCounts, linkEvidence } from '../../domain/audit';
-import type { ProjectAudit } from '../../domain/types';
+import type { EvidenceItem, ProjectAudit } from '../../domain/types';
 import { ClaimList } from './ClaimList';
 import { EvidenceGraph } from './EvidenceGraph';
 import { ProcessingTrace } from './ProcessingTrace';
@@ -49,35 +49,40 @@ export function AuditDashboard({ initialAudit }: { initialAudit: ProjectAudit })
     });
     setSelectedId(firstId);
   };
-  const uploadEvidence = async (file: File) => {
-    const text = (await extractFileText(file)).replace(/\s+/g, ' ').trim();
-    if (!text) {
-      setEvidenceNotice({ claimId: selected.id, title: '没有读取到正文', text: '请改用 PDF、Markdown、TXT、CSV 或 JSON 文件。' });
-      return;
+  const uploadEvidence = async (files: File[]) => {
+    const batch = Date.now().toString(36);
+    const assessed: Array<{ file: File; assessment: Required<Pick<EvidenceItem, 'relation' | 'excerpt' | 'reason' | 'confidence'>>; id: string }> = [];
+    for (const [index, file] of files.slice(0, 5).entries()) {
+      const text = (await extractFileText(file)).replace(/\s+/g, ' ').trim();
+      let assessment: { relation: 'support' | 'conflict' | 'unrelated' | 'unreviewed'; excerpt: string; reason: string; confidence: number };
+      if (!text) {
+        assessment = { relation: 'unreviewed', excerpt: '未读取到可核对正文', reason: '请改用 PDF、Markdown、TXT、CSV 或 JSON 文件。', confidence: 0 };
+      } else {
+        try {
+          const response = await fetch('/api/local/evidence', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ claim: selected.statement, evidence: text.slice(0, 12000), source: file.name }) });
+          const payload = await response.json();
+          if (!payload.result) throw new Error('missing assessment');
+          assessment = payload.result;
+        } catch {
+          assessment = { relation: 'unreviewed', excerpt: text.slice(0, 260), reason: '端侧核验服务暂不可用，尚未判断这份材料与主张的关系。', confidence: 0 };
+        }
+      }
+      assessed.push({ file, assessment, id: `evidence-upload-${batch}-${index}` });
     }
-    let assessment: { relation: 'support' | 'conflict' | 'unrelated' | 'unreviewed'; excerpt: string; reason: string; confidence: number };
-    try {
-      const response = await fetch('/api/local/evidence', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ claim: selected.statement, evidence: text.slice(0, 12000), source: file.name }) });
-      const payload = await response.json();
-      if (!payload.result) throw new Error('missing assessment');
-      assessment = payload.result;
-    } catch {
-      assessment = { relation: 'unreviewed', excerpt: text.slice(0, 260), reason: '端侧核验服务暂不可用，尚未判断这份材料与主张的关系。', confidence: 0 };
-    }
-    const evidenceId = `evidence-upload-${Date.now().toString(36)}`;
+    const counts = assessed.reduce((result, item) => ({ ...result, [item.assessment.relation]: result[item.assessment.relation] + 1 }), { support: 0, conflict: 0, unrelated: 0, unreviewed: 0 });
     setAudit((current) => ({
       ...current,
-      evidence: [...current.evidence, { id: evidenceId, title: file.name, kind: 'document', excerpt: assessment.excerpt, source: file.name, confidence: assessment.confidence, relation: assessment.relation, reason: assessment.reason }],
-      claims: current.claims.map((claim) => claim.id === selected.id ? { ...claim, status: assessment.relation === 'conflict' ? 'conflict' : assessment.relation === 'support' && claim.status !== 'verified' ? 'weak' : claim.status, evidenceIds: [...claim.evidenceIds, evidenceId] } : claim),
-      trace: [...current.trace, { stage: 'device', label: 'OpenVINO 证据核验', detail: `“${file.name}”已解析；端侧判断为${{ support: '支持', conflict: '冲突', unrelated: '无关', unreviewed: '待判断' }[assessment.relation]}。` }],
+      evidence: [...current.evidence, ...assessed.map(({ id, file, assessment }) => ({ id, title: file.name, kind: 'document' as const, excerpt: assessment.excerpt, source: file.name, confidence: assessment.confidence, relation: assessment.relation, reason: assessment.reason }))],
+      claims: current.claims.map((claim) => claim.id === selected.id ? { ...claim, status: counts.conflict ? 'conflict' : counts.support && claim.status !== 'verified' ? 'weak' : claim.status, evidenceIds: [...claim.evidenceIds, ...assessed.map((item) => item.id)] } : claim),
+      trace: [...current.trace, { stage: 'device', label: assessed.length > 1 ? 'OpenVINO 批量证据核验' : 'OpenVINO 证据核验', detail: `${assessed.length} 份材料已逐份核验：${counts.support} 份支持、${counts.conflict} 份冲突、${counts.unrelated} 份无关、${counts.unreviewed} 份待判断。` }],
     }));
-    setEvidenceNotice(assessment.relation === 'support'
-      ? { claimId: selected.id, title: '找到证据啦', text: `${assessment.reason}。已定位原文，请核对后确认关系。` }
-      : assessment.relation === 'conflict'
-        ? { claimId: selected.id, title: '发现冲突证据', text: `${assessment.reason}。请修正主张或补充更可靠的材料。` }
-        : assessment.relation === 'unrelated'
-          ? { claimId: selected.id, title: '这份材料不相关', text: `${assessment.reason}，不能用于证明当前主张。` }
-          : { claimId: selected.id, title: '等待人工判断', text: assessment.reason });
+    const summary = `${assessed.length} 份材料中：${counts.support} 份支持，${counts.conflict} 份冲突，${counts.unrelated} 份无关，${counts.unreviewed} 份待判断。`;
+    const single = assessed[0]?.assessment;
+    setEvidenceNotice({
+      claimId: selected.id,
+      title: assessed.length > 1 ? '批量核验完成' : counts.support ? '找到证据啦' : counts.conflict ? '发现冲突证据' : counts.unrelated ? '这份材料不相关' : '等待人工判断',
+      text: assessed.length > 1 ? `${summary} 已按关系和可信度排序。` : single?.relation === 'unrelated' ? `${single.reason}，不能用于证明当前主张。` : `${single?.reason ?? ''}。已定位原文，请核对后处理关系。`,
+    });
   };
   const confirmEvidence = () => {
     setAudit((current) => {

@@ -1,14 +1,17 @@
 import { useRef, useState } from 'react';
 import type { Claim, EvidenceItem } from '../../domain/types';
 
-export function RiskInspector({ claim, evidence, repaired, notice, onRepair, onEvidenceUpload, onConfirmEvidence }: { claim: Claim; evidence: EvidenceItem[]; repaired: boolean; notice?: { title: string; text: string }; onRepair: () => void; onEvidenceUpload: (file: File) => Promise<void>; onConfirmEvidence: () => void }) {
+export function RiskInspector({ claim, evidence, repaired, notice, onRepair, onEvidenceUpload, onConfirmEvidence }: { claim: Claim; evidence: EvidenceItem[]; repaired: boolean; notice?: { title: string; text: string }; onRepair: () => void; onEvidenceUpload: (files: File[]) => Promise<void>; onConfirmEvidence: () => void }) {
   const sources = evidence.filter((item) => claim.evidenceIds.includes(item.id));
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  const upload = async (file?: File) => {
-    if (!file) return;
+  const [uploadCount, setUploadCount] = useState(0);
+  const upload = async (files: File[]) => {
+    if (!files.length) return;
+    const batch = files.slice(0, 5);
+    setUploadCount(batch.length);
     setUploading(true);
-    try { await onEvidenceUpload(file); } finally { setUploading(false); }
+    try { await onEvidenceUpload(batch); } finally { setUploading(false); setUploadCount(0); }
   };
   return (
     <section className="risk-panel" role="region" aria-label="风险检查器">
@@ -21,8 +24,8 @@ export function RiskInspector({ claim, evidence, repaired, notice, onRepair, onE
       <div className="repair-box"><span>建议修复</span><p>{claim.repair}</p></div>
       {notice && <div className="evidence-found" role="status"><strong>{notice.title}</strong><p>{notice.text}</p></div>}
       {claim.id === 'claim-energy' ? <button className="repair-action" type="button" onClick={onRepair} disabled={repaired}>{repaired ? '30 天对照实验已入链' : '补充 30 天对照实验'}</button> : <>
-        <input ref={inputRef} className="visually-hidden" aria-label="按建议上传证据文件" type="file" accept=".pdf,.md,.txt,.csv,.json" onChange={(event) => { void upload(event.target.files?.[0]); event.target.value = ''; }} />
-        <button className="repair-action" type="button" onClick={() => inputRef.current?.click()} disabled={uploading}>{uploading ? '正在读取证据…' : '按建议上传证据'}</button>
+        <input ref={inputRef} className="visually-hidden" aria-label="按建议上传证据文件" type="file" accept=".pdf,.md,.txt,.csv,.json" multiple onChange={(event) => { void upload(Array.from(event.target.files ?? [])); event.target.value = ''; }} />
+        <button className="repair-action" type="button" onClick={() => inputRef.current?.click()} disabled={uploading}>{uploading ? `正在逐份核验 ${uploadCount} 份材料…` : '上传材料并智能排序（最多 5 份）'}</button>
         {sources.some((item) => item.relation === 'support') && claim.status !== 'verified' && <button className="confirm-evidence-action" type="button" onClick={onConfirmEvidence}>确认关系并完成审阅</button>}
       </>}
     </section>

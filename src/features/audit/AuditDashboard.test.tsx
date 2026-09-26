@@ -91,6 +91,33 @@ describe('evidence cockpit', () => {
     vi.unstubAllGlobals();
   });
 
+  it('checks several materials and ranks the strongest support first', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (_url: string, options?: RequestInit) => {
+      const body = JSON.parse(String(options?.body ?? '{}')) as { source?: string };
+      const isSupport = body.source === '版本清单.md';
+      return {
+        json: async () => ({ state: 'service_ready', result: isSupport
+          ? { relation: 'support', excerpt: '模型版本 Qwen3-4B INT4', reason: '直接给出版本号', confidence: 0.94 }
+          : { relation: 'unrelated', excerpt: '食堂满意度 92%', reason: '与模型版本无关', confidence: 0.99 } }),
+      };
+    }));
+    render(<AuditDashboard initialAudit={demoProject} />);
+    await userEvent.click(screen.getByRole('button', { name: /传感数据全程不包含可识别个人信息/ }));
+    const inspector = screen.getByRole('region', { name: '风险检查器' });
+    await userEvent.upload(within(inspector).getByLabelText('按建议上传证据文件'), [
+      new File(['食堂满意度 92%'], '满意度.txt', { type: 'text/plain' }),
+      new File(['模型版本 Qwen3-4B INT4'], '版本清单.md', { type: 'text/markdown' }),
+    ]);
+
+    expect(await within(inspector).findByText('批量核验完成')).toBeVisible();
+    expect(within(inspector).getByText(/2 份材料中：1 份支持.*1 份无关/)).toBeVisible();
+    const cards = screen.getByRole('figure', { name: /与 4 条证据的关系图/ }).querySelectorAll('.evidence-card');
+    expect(cards[0]).toHaveTextContent('版本清单.md');
+    expect(cards[cards.length - 1]).toHaveTextContent('满意度.txt');
+    expect(within(inspector).getByRole('button', { name: '确认关系并完成审阅' })).toBeVisible();
+    vi.unstubAllGlobals();
+  });
+
   it('turns reviewer-confirmed Qwen findings into linked claims and evidence', async () => {
     vi.stubGlobal('fetch', vi.fn(async (url: string) => ({
       json: async () => url.includes('local/status')
