@@ -1,15 +1,29 @@
 export type ClaimStatus = 'verified' | 'weak' | 'conflict' | 'missing';
 export type EvidenceKind = 'document' | 'code' | 'data' | 'image' | 'log';
 
+export interface SourceFragment {
+  id: string;
+  evidenceId: string;
+  source: string;
+  locator: string;
+  text: string;
+  fingerprint: string;
+}
+
 export interface EvidenceItem {
   id: string;
   title: string;
   kind: EvidenceKind;
   excerpt: string;
   source: string;
+  sourceFingerprint?: string;
   confidence: number;
+  content?: string;
+  extractionMethod?: 'browser-text' | 'pdfjs' | 'xparse-ocr' | 'none';
   relation?: 'support' | 'conflict' | 'unrelated' | 'unreviewed';
   reason?: string;
+  fragments?: SourceFragment[];
+  rawContent?: string;
 }
 
 export interface Claim {
