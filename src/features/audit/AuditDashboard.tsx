@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { demoEvidence } from '../../data/demoProject';
-import { getRiskCounts, linkEvidence, recalculateAudit } from '../../domain/audit';
+import { findGroundedSource, getRiskCounts, linkEvidence, recalculateAudit } from '../../domain/audit';
 import type { EvidenceItem, ProjectAudit } from '../../domain/types';
 import { ClaimList } from './ClaimList';
 import { EvidenceGraph } from './EvidenceGraph';
@@ -23,6 +23,8 @@ export function AuditDashboard({ initialAudit, sourceFiles }: { initialAudit: Pr
   const [evidenceNotice, setEvidenceNotice] = useState<{ claimId: string; title: string; text: string }>();
   const counts = getRiskCounts(audit);
   const selected = useMemo(() => audit.claims.find((item) => item.id === selectedId) ?? audit.claims[0], [audit, selectedId]);
+  const reviewableEvidenceIds = useMemo(() => new Set(audit.evidence.filter((item) => item.relation === 'unreviewed' && findGroundedSource(audit, item)).map((item) => item.id)), [audit]);
+  const confirmableEvidenceIds = useMemo(() => new Set(audit.evidence.filter((item) => item.relation === 'support' && findGroundedSource(audit, item)).map((item) => item.id)), [audit]);
   const repaired = audit.evidence.some((item) => item.id === demoEvidence.id);
   const isDemo = !audit.id.startsWith('import-');
   const archiveNumber = `PM-${audit.id.replace(/[^a-z0-9]/gi, '').slice(0, 10).toUpperCase() || 'UNTITLED'}`;
@@ -90,16 +92,32 @@ export function AuditDashboard({ initialAudit, sourceFiles }: { initialAudit: Pr
   const confirmEvidence = () => {
     if (!selected) return;
     setAudit((current) => {
+      if (!current.evidence.some((item) => selected.evidenceIds.includes(item.id) && item.relation === 'support' && findGroundedSource(current, item))) return current;
       return recalculateAudit({
         ...current,
+        evidence: current.evidence.map((item) => selected.evidenceIds.includes(item.id) && item.relation === 'support' && findGroundedSource(current, item) ? { ...item, reviewedByHuman: true } : item),
         claims: current.claims.map((claim) => claim.id === selected.id ? { ...claim, status: 'verified', risk: '', repair: '证据关系已经人工核对，可在答辩材料中引用。' } : claim),
         trace: [...current.trace, { stage: 'device', label: '人工确认关系', detail: '审阅者已确认候选证据能够支持当前主张，证据闭环完成。' }],
       });
     });
     setEvidenceNotice({ claimId: selected.id, title: '证据闭环', text: '证据关系已由你确认，主张状态已更新为“已证实”。' });
   };
+  const reviewEvidenceRelation = (evidenceId: string, relation: 'support' | 'conflict') => {
+    if (!selected) return;
+    setAudit((current) => {
+      const target = current.evidence.find((item) => item.id === evidenceId);
+      if (!target || target.relation !== 'unreviewed' || !findGroundedSource(current, target)) return current;
+      const evidence = current.evidence.map((item) => item.id === evidenceId ? { ...item, relation, reviewedByHuman: true, reason: '审阅者已对照原文件确认这段话与当前主张的关系。' } : item);
+      const linked = evidence.filter((item) => selected.evidenceIds.includes(item.id));
+      const status = linked.some((item) => item.relation === 'conflict') ? 'conflict' : linked.some((item) => item.relation === 'support') ? 'weak' : 'missing';
+      return recalculateAudit({ ...current, evidence,
+        claims: current.claims.map((claim) => claim.id === selected.id ? { ...claim, status } : claim),
+        trace: [...current.trace, { stage: 'device', label: '人工核对原文关系', detail: `已在原文件中核对“${target.excerpt.slice(0, 48)}”，标记为${relation === 'support' ? '支持' : '冲突'}。` }],
+      });
+    });
+  };
   const acceptQwenFindings = (findings: QwenClaim[]): ReviewDelta => {
-    const result = mergeReviewRound(audit, findings.map((finding) => ({ ...finding, relation: 'support', confidence: 0.72 })), { origin: 'qwen', revision: audit.trace.length + 1 });
+    const result = mergeReviewRound(audit, findings.map((finding) => ({ ...finding, relation: isDemo ? 'support' : 'unreviewed', confidence: 0.72 })), { origin: 'qwen', revision: audit.trace.length + 1 });
     const next = recalculateAudit({ ...result.audit, trace: [...result.audit.trace, { stage: 'cloud', label: 'Qwen 云端复核入档', detail: `本轮新增 ${result.delta.added}、更新 ${result.delta.updated}、合并 ${result.delta.merged}、解决 ${result.delta.resolved}；剩余 ${result.delta.remaining} 条待复核。` }] });
     setAudit(next);
     if (result.delta.changedClaimIds[0]) setSelectedId(result.delta.changedClaimIds[0]);
@@ -108,10 +126,13 @@ export function AuditDashboard({ initialAudit, sourceFiles }: { initialAudit: Pr
 
   const unresolved = audit.claims.filter((claim) => claim.status !== 'verified');
   const localText = audit.evidence.map((item) => `${item.source}: ${item.content || item.excerpt}`).join('\n').slice(0, 12000);
-  const cloudText = unresolved.map((claim) => {
+  const unresolvedText = unresolved.map((claim, index) => {
     const sources = audit.evidence.filter((item) => claim.evidenceIds.includes(item.id));
-    return `【待复核主张】${claim.statement}\n【当前风险】${claim.risk}\n【当前证据】${sources.map((item) => `${item.source}: ${item.excerpt}`).join('；') || '暂无'}`;
-  }).join('\n\n').slice(0, 12000);
+    return `【待复核主张 ${index + 1}】${claim.statement}\n【当前风险】${claim.risk}\n【当前证据】${sources.map((item) => `${item.source}: ${item.excerpt}`).join('；') || '暂无'}`;
+  }).join('\n\n').slice(0, 3500);
+  const sourceText = audit.evidence.filter((item) => item.content && item.extractionMethod)
+    .map((item) => `${item.source}:\n${item.content?.slice(0, 5000)}`).join('\n\n').slice(0, 8500);
+  const cloudText = sourceText ? `${unresolvedText}\n\n【上传原文】\n${sourceText}` : unresolvedText;
 
   return (
     <main className="cockpit">
@@ -126,7 +147,7 @@ export function AuditDashboard({ initialAudit, sourceFiles }: { initialAudit: Pr
       {repaired && <div className="audit-stamp is-new" role="status"><span>证据闭环</span><small>HUMAN REVIEWED</small></div>}
       <div className="cockpit-grid">
         <ClaimList claims={audit.claims} selectedId={selected?.id ?? ''} onSelect={setSelectedId} />
-        {selected ? <><EvidenceGraph claim={selected} evidence={audit.evidence} /><RiskInspector claim={selected} evidence={audit.evidence} repaired={repaired} notice={evidenceNotice?.claimId === selected.id ? evidenceNotice : undefined} onRepair={repair} onEvidenceUpload={uploadEvidence} onConfirmEvidence={confirmEvidence} /></> : <section className="empty-review-state"><p className="section-kicker">MODEL REVIEW / WAITING</p><h2>尚未生成可核验主张</h2><p>文件提取不是模型分析。请先在下方运行 OpenVINO 端侧初审，确认候选后再使用 Qwen 复核未解决项。</p></section>}
+        {selected ? <><EvidenceGraph claim={selected} evidence={audit.evidence} claimPosition={audit.claims.findIndex((claim) => claim.id === selected.id) + 1} claimCount={audit.claims.length} /><RiskInspector claim={selected} evidence={audit.evidence} repaired={repaired} notice={evidenceNotice?.claimId === selected.id ? evidenceNotice : undefined} onRepair={repair} onEvidenceUpload={uploadEvidence} onConfirmEvidence={confirmEvidence} onReviewEvidenceRelation={reviewEvidenceRelation} reviewableEvidenceIds={reviewableEvidenceIds} confirmableEvidenceIds={confirmableEvidenceIds} /></> : <section className="empty-review-state"><p className="section-kicker">MODEL REVIEW / WAITING</p><h2>尚未生成可核验主张</h2><p>文件提取不是模型分析。请先在下方运行 OpenVINO 端侧初审，确认候选后再使用 Qwen 复核未解决项。</p></section>}
       </div>
       <ProcessingTrace items={audit.trace} />
       <SourceMaterialPanel evidence={audit.evidence} sourceFiles={availableSourceFiles} onRelink={(files) => setAvailableSourceFiles((current) => [...current, ...files])} />

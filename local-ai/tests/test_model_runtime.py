@@ -53,3 +53,14 @@ def test_evidence_assessment_parses_relation_excerpt_reason_and_confidence(tmp_p
     }
     assert "只允许输出支持、冲突或无关" in pipeline.prompt
     assert pipeline.options == {"max_new_tokens": 180, "do_sample": False}
+
+
+def test_evidence_assessment_does_not_turn_an_invented_quote_into_support(tmp_path: Path):
+    runtime = ModelRuntime(Settings(model_path=tmp_path, device="CPU"))
+    runtime._pipeline = EvidencePipeline()
+
+    result = runtime.assess_evidence("部署记录包含模型版本号", "材料只提到有一份部署清单。", "部署清单.md")
+
+    assert result["relation"] == "unreviewed"
+    assert result["confidence"] == 0
+    assert "未在原材料中找到" in result["reason"]

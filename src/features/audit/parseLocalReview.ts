@@ -8,7 +8,7 @@ export type LocalReview = {
 const clean = (value: string) => cleanExtractedText(value.replace(/^\s*(?:\d+[.、)]\s*)?/, '')).replace(/(?:^|\n)\s*\d+[.、)]\s*$/gm, '').trim();
 
 const splitItems = (value: string) => {
-  const numbered = value.split(/(?:^|\n)\s*\d+[.、)]\s*/).map(clean).filter(Boolean);
+  const numbered = value.split(/(?:^|[\n;；。:：]\s*|\s+)[1-9]\d?[.、)]\s*(?!\d)/u).map(clean).filter(Boolean);
   if (numbered.length > 1) return numbered;
   const bullets = value.split(/(?:^|\n)\s*[-•]\s*/).map(clean).filter(Boolean);
   return bullets.length ? bullets : [clean(value)].filter(Boolean);

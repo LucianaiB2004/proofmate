@@ -125,7 +125,14 @@ test('carries the local AI result through the Vite proxy into the product UI', a
 });
 
 test('convergent real-material review stays readable and idempotent', async ({ page }) => {
-  await page.route('**/api/qwen/analyze', async (route) => route.fulfill({
+  await page.route('**/api/local/analyze', async (route) => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ state: 'service_ready', result: { summary: '【核心结论】1. 代理链路返回的端侧证据结论。\n【证据依据】1. Pilot evidence shows energy reduction of 18 percent.\n【风险与边界】1. 需要补充来源。\n【下一步补证】1. 核对 PDF 原文。' } }),
+  }));
+  let cloudReviewInput = '';
+  await page.route('**/api/qwen/analyze', async (route) => {
+    cloudReviewInput = (route.request().postDataJSON() as { text: string }).text;
+    await route.fulfill({
     status: 200,
     contentType: 'application/json',
     body: JSON.stringify({ state: 'provider_ready', claims: [{
@@ -135,7 +142,8 @@ test('convergent real-material review stays readable and idempotent', async ({ p
       source: 'review.pdf · P1',
       excerpt: 'Pilot evidence shows energy reduction of 18 percent.',
     }] }),
-  }));
+  });
+  });
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const sheet = pdf.addPage();
@@ -160,11 +168,40 @@ test('convergent real-material review stays readable and idempotent', async ({ p
   await expect(page.locator('.claim-list .claim-item')).toHaveCount(1);
 
   await page.getByRole('button', { name: '复核 1 条未解决主张' }).click();
+  expect(cloudReviewInput).toContain('【上传原文】');
+  expect(cloudReviewInput).toContain('Pilot evidence shows energy reduction of 18 percent.');
   await page.getByRole('button', { name: '确认 1 条云端发现并加入档案' }).click();
   await expect(page.locator('.claim-list .claim-item')).toHaveCount(1);
   await expect(page.getByTestId('human-review-slip')).toContainText('剩余 1 条待复核');
+  await expect(page.getByRole('figure', { name: /与 2 条证据的关系图/ })).toContainText('review.pdf');
 
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await expect(page.getByRole('heading', { name: '证据关系板' })).toBeVisible();
+});
+
+test('shows three inline OpenVINO findings as separate selectable relationships with an explained zero score', async ({ page }) => {
+  await page.route('**/api/local/analyze', async (route) => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ state: 'service_ready', result: { summary: [
+      '【核心结论】1. 低温密封性能未验证；2. 发射当日温度缺失；3. 工程师书面意见缺失。',
+      '【证据依据】1. 材料只有项目组结论；2. 材料没有温度记录；3. 材料没有签收记录。',
+      '【风险与边界】1. 不能外推低温可靠性；2. 不能核对当日条件；3. 不能核对意见流转。',
+      '【下一步补证】1. 补充低温测试；2. 补充当日温度；3. 补充书面签收。',
+    ].join('\n') } }),
+  }));
+  await page.goto('/');
+  await page.locator('input[type=file]').setInputFiles({ name: 'decision.txt', mimeType: 'text/plain', buffer: Buffer.from('项目组认为低温密封可靠，但材料没有温度记录或签收记录。') });
+  await page.getByRole('button', { name: '使用端侧模型分析' }).click();
+  await page.getByRole('button', { name: '确认并加入档案' }).click();
+  await expect(page.locator('.claim-list .claim-item')).toHaveCount(3);
+  await expect(page.getByLabel('证据健康度 0 分')).toBeVisible();
+
+  for (const [index, phrase] of ['材料只有项目组结论', '材料没有温度记录', '材料没有签收记录'].entries()) {
+    await page.locator('.claim-list .claim-item').nth(index).click();
+    await expect(page.getByRole('figure', { name: /与 1 条证据的关系图/ })).toContainText(phrase);
+    await expect(page.locator('.graph-panel .panel-heading')).toContainText(`第 ${index + 1}/3 条主张`);
+  }
+  await page.getByText('评分怎么算').click();
+  await expect(page.locator('.score-method')).toContainText('模型提示与无法回到原文的摘录不计分');
 });

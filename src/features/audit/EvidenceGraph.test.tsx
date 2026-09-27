@@ -11,7 +11,7 @@ it('presents a readable claim-to-evidence relationship without an oversized canv
   expect(within(board).getByText(claim.statement)).toBeVisible();
   expect(within(board).getByText('项目研究报告 v3')).toBeVisible();
   expect(within(board).getByText('研究报告.pdf · P12')).toBeVisible();
-  expect(within(board).getByText('91%')).toBeVisible();
+  expect(within(board).getByText(/模型估计 91%/)).toBeVisible();
   expect(board.querySelector('svg')).not.toBeInTheDocument();
 });
 
@@ -44,4 +44,14 @@ it('keeps five linked evidence items quiet until the user expands them', async (
   expect(screen.queryByText(evidence[0].excerpt)).not.toBeInTheDocument();
   await userEvent.click(screen.getAllByRole('button', { name: '展开完整原文' })[0]);
   expect(screen.getByText(evidence[0].excerpt)).toBeVisible();
+});
+
+it('distinguishes a model locator hint from scoring support in the relationship board', () => {
+  const claim = { ...demoProject.claims[0], status: 'missing' as const, evidenceIds: ['hint'] };
+  const hint = { id: 'hint', title: 'OpenVINO 定位依据', kind: 'document' as const, excerpt: '模型认为原文缺少低温测试', source: 'OpenVINO 分析结果', relation: 'unreviewed' as const, confidence: .45 };
+  render(<EvidenceGraph claim={claim} evidence={[hint]} />);
+  expect(screen.getByRole('figure', { name: /与 1 条证据的关系图/ })).toHaveTextContent('待判断');
+  expect(screen.getByText(/待判断线索/)).toBeVisible();
+  expect(screen.getByText('不计分')).toBeVisible();
+  expect(document.querySelector('.relation-rail')).toHaveClass('is-pending');
 });

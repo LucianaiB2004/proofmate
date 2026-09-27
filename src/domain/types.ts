@@ -23,6 +23,7 @@ export interface EvidenceItem {
   extractionMethod?: 'browser-text' | 'pdfjs' | 'xparse-ocr' | 'none';
   relation?: 'support' | 'conflict' | 'unrelated' | 'unreviewed';
   reason?: string;
+  reviewedByHuman?: boolean;
   fragments?: SourceFragment[];
   rawContent?: string;
 }

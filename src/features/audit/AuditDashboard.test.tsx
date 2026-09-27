@@ -206,4 +206,65 @@ describe('evidence cockpit', () => {
     expect(screen.getByText('Qwen 云端复核入档')).toBeVisible();
     vi.unstubAllGlobals();
   });
+
+  it('requires a person to classify a source-matched cloud quote before it contributes to the score', async () => {
+    const source = {
+      id: 'source', title: '部署清单.md', kind: 'document' as const, source: '部署清单.md',
+      sourceFingerprint: 'deployment-file', extractionMethod: 'browser-text' as const,
+      content: '模型版本：Qwen3-4B INT4。', excerpt: '模型版本：Qwen3-4B INT4。', confidence: .8,
+    };
+    const imported = {
+      ...demoProject, id: 'import-review-flow', evidence: [source],
+      claims: [{ id: 'claim-version-real', statement: '部署记录包含模型版本号', importance: 'high' as const, status: 'missing' as const, evidenceIds: [], risk: '待核对', repair: '查部署清单' }],
+    };
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => ({
+      json: async () => url.includes('local/status') ? { state: 'service_ready', model_state: 'ready' }
+        : { state: 'provider_ready', claims: [{ statement: '部署记录包含模型版本号', risk: '还需人工确认', repair: '核对部署清单', source: '部署清单.md', excerpt: '模型版本：Qwen3-4B INT4。' }] },
+    })));
+    render(<AuditDashboard initialAudit={imported} />);
+    await userEvent.click(screen.getByRole('button', { name: '复核 1 条未解决主张' }));
+    await userEvent.click(await screen.findByRole('button', { name: '确认 1 条云端发现并加入档案' }));
+    const inspector = screen.getByRole('region', { name: '风险检查器' });
+    expect(screen.getByLabelText('证据健康度 0 分')).toBeVisible();
+    expect(screen.getByRole('figure', { name: /与 1 条证据的关系图/ })).toHaveTextContent('待判断');
+    await userEvent.click(within(inspector).getByRole('button', { name: '确认支持' }));
+    const candidateScore = Number(screen.getByRole('img', { name: /证据审核章/ }).querySelector('strong')?.textContent);
+    expect(candidateScore).toBeGreaterThan(0);
+    expect(screen.getByRole('figure', { name: /与 1 条证据的关系图/ })).toHaveTextContent('人工已核对');
+    expect(within(inspector).getByRole('button', { name: '确认关系并完成审阅' })).toBeVisible();
+    await userEvent.click(within(inspector).getByRole('button', { name: '确认关系并完成审阅' }));
+    expect(Number(screen.getByRole('img', { name: /证据审核章/ }).querySelector('strong')?.textContent)).toBeGreaterThan(candidateScore);
+    vi.unstubAllGlobals();
+  });
+
+  it('lets the reviewer mark a matched quotation as conflicting without granting support points', async () => {
+    const excerpt = '2026-09-25 实测结果只有 3%。';
+    const imported = {
+      ...demoProject, id: 'import-conflict-flow',
+      evidence: [
+        { id: 'source', title: '复算.txt', kind: 'document' as const, source: '复算.txt', sourceFingerprint: 'file-1', extractionMethod: 'browser-text' as const, content: excerpt, excerpt, confidence: .8 },
+        { id: 'quote', title: '复算.txt · 原文', kind: 'document' as const, source: '复算.txt', sourceFingerprint: 'file-1', excerpt, relation: 'unreviewed' as const, confidence: .45 },
+      ],
+      claims: [{ id: 'claim-energy-real', statement: '能耗下降 31%', importance: 'high' as const, status: 'missing' as const, evidenceIds: ['quote'], risk: '数据不一致', repair: '复算' }],
+    };
+    render(<AuditDashboard initialAudit={imported} />);
+    const inspector = screen.getByRole('region', { name: '风险检查器' });
+    await userEvent.click(within(inspector).getByRole('button', { name: '标记冲突' }));
+    expect(screen.getByText('1 有冲突')).toBeVisible();
+    expect(screen.getByLabelText('证据健康度 0 分')).toBeVisible();
+    expect(screen.getByRole('figure', { name: /与 1 条证据的关系图/ })).toHaveTextContent('人工已核对');
+  });
+
+  it('does not offer final confirmation for a legacy support label whose quote is absent from the file', () => {
+    const imported = {
+      ...demoProject, id: 'import-legacy-support',
+      evidence: [
+        { id: 'source', title: '材料.txt', kind: 'document' as const, source: '材料.txt', extractionMethod: 'browser-text' as const, content: '原文只写了待审事项。', excerpt: '原文只写了待审事项。', confidence: .8 },
+        { id: 'false-support', title: '虚构摘录', kind: 'document' as const, source: '材料.txt', excerpt: '不存在的实测结果', relation: 'support' as const, confidence: .9 },
+      ],
+      claims: [{ id: 'claim-legacy', statement: '模型已完成实测', importance: 'high' as const, status: 'weak' as const, evidenceIds: ['false-support'], risk: '待核查', repair: '核对原文' }],
+    };
+    render(<AuditDashboard initialAudit={imported} />);
+    expect(within(screen.getByRole('region', { name: '风险检查器' })).queryByRole('button', { name: '确认关系并完成审阅' })).not.toBeInTheDocument();
+  });
 });

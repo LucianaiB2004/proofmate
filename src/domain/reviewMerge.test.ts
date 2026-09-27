@@ -51,3 +51,35 @@ it('deduplicates shared source evidence and keeps missing excerpts unreviewed', 
   expect(hintEvidence?.confidence).toBeLessThan(0.5);
   expect(hint.audit.claims.at(-1)?.status).toBe('missing');
 });
+
+it('locates a cloud quote in the uploaded source but leaves its relation for human review', () => {
+  const source = {
+    id: 'import-evidence-0', title: '部署清单.md', kind: 'document' as const,
+    source: '部署清单.md', sourceFingerprint: 'file-v1', extractionMethod: 'browser-text' as const,
+    content: '环境配置\n模型版本：Qwen3-4B INT4\n部署日期：2026-09-25',
+    excerpt: '环境配置', confidence: .8,
+    fragments: [{ id: 'fragment-2', evidenceId: 'import-evidence-0', source: '部署清单.md', locator: '段落 2', text: '模型版本：Qwen3-4B INT4', fingerprint: '模型版本qwen34bint4' }],
+  };
+  const audit = { ...emptyAudit(), evidence: [source] };
+  const matched = mergeReviewRound(audit, [{ ...finding, source: '模型分析结果' }], { origin: 'qwen', revision: 1 });
+  expect(matched.audit.evidence.at(-1)).toMatchObject({ relation: 'unreviewed', source: '部署清单.md', sourceFingerprint: 'file-v1', locator: '段落 2' });
+  expect(matched.audit.claims[0].status).toBe('missing');
+
+  const invented = mergeReviewRound(audit, [{ ...finding, excerpt: '原文件没有写这句话', source: '部署清单.md' }], { origin: 'qwen', revision: 1 });
+  expect(invented.audit.evidence.at(-1)).toMatchObject({ relation: 'unreviewed', reason: expect.stringContaining('未在已上传材料中找到') });
+  expect(invented.audit.claims[0].status).toBe('missing');
+});
+
+it('uses the named uploaded file when the same quote appears in two files', () => {
+  const sameText = '模型版本：Qwen3-4B INT4';
+  const files = ['草稿.md', '正式部署清单.md'].map((source, index) => ({
+    id: `file-${index}`, title: source, kind: 'document' as const, source,
+    sourceFingerprint: `fingerprint-${index}`, extractionMethod: 'browser-text' as const,
+    content: sameText, excerpt: sameText, confidence: .8,
+  }));
+  const audit = { ...emptyAudit(), evidence: files };
+  const result = mergeReviewRound(audit, [{ ...finding, source: '正式部署清单.md · 段落 1' }], { origin: 'qwen', revision: 1 });
+  expect(result.audit.evidence.at(-1)).toMatchObject({ source: '正式部署清单.md', sourceFingerprint: 'fingerprint-1' });
+  const ambiguous = mergeReviewRound(audit, [{ ...finding, source: '模型分析结果' }], { origin: 'qwen', revision: 1 });
+  expect(ambiguous.audit.evidence.at(-1)?.relation).toBe('unreviewed');
+});

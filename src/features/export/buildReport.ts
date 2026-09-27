@@ -23,8 +23,10 @@ export function buildMarkdownReport(audit: ProjectAudit): string {
 - 总分：${audit.score}/100
 - 证据覆盖度：${audit.dimensions.coverage}
 - 一致性：${audit.dimensions.consistency}
-- 时效性：${audit.dimensions.freshness}
-- 可复现性：${audit.dimensions.reproducibility}
+- 时间信息：${audit.dimensions.freshness}
+- 复核完成度：${audit.dimensions.reproducibility}
+
+评分公式：35% × 覆盖度 + 25% × 一致性 + 15% × 时间信息 + 25% × 复核完成度，四舍五入。逐条主张按核心 2、高 1.5、普通 1 加权。支持摘录必须回到原文件并经人工确认关系才计分；模型提示不计分。没有支持证据时，一致性记 0。人工确认原文关系后复核完成度为 50%，主张最终审阅完成后为 100%。
 
 ## 核心主张与证据
 

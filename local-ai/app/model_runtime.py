@@ -91,7 +91,12 @@ class ModelRuntime:
         relation = {"支持": "support", "冲突": "conflict", "无关": "unrelated"}.get(fields["关系"], "unrelated")
         excerpt = fields["原文"]
         if not excerpt or excerpt not in evidence:
-            excerpt = next((part.strip() for part in re.split(r"[。！？\n]", evidence) if part.strip()), evidence[:240].strip())
+            return {
+                "relation": "unreviewed",
+                "excerpt": next((part.strip() for part in re.split(r"[。！？\n]", evidence) if part.strip()), evidence[:240].strip())[:300],
+                "reason": "模型返回的原文未在原材料中找到，需人工核对后再判断关系。",
+                "confidence": 0,
+            }
         confidence_match = re.search(r"\d+", fields["置信度"])
         confidence = min(100, max(0, int(confidence_match.group()))) / 100 if confidence_match else 0.5
         return {"relation": relation, "excerpt": excerpt[:300], "reason": fields["理由"] or "端侧模型未提供判断理由。", "confidence": confidence}

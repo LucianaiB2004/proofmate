@@ -9,6 +9,8 @@ it('builds readable located evidence without pretending extracted lines are clai
   expect(audit.evidence[0].content).not.toMatch(/#|<\/?(?:table|tr|td)>/i);
   expect(audit.evidence[0].fragments?.map((item) => item.locator)).toEqual(['段落 1', '段落 2']);
   expect(audit.claims).toEqual([]);
+  expect(audit.dimensions).toEqual({ coverage: 0, consistency: 0, freshness: 0, reproducibility: 0 });
+  expect(audit.score).toBe(0);
   expect(audit.trace[0].detail).toContain('1 份');
   expect(audit.trace.some((item) => item.detail.includes('端侧初审待运行'))).toBe(true);
 });

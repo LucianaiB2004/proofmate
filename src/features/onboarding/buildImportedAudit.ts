@@ -34,7 +34,7 @@ export async function buildImportedAudit(files: File[], extractor?: (file: File)
       confidence: text ? 0.72 : 0.35,
     };
   });
-  const dimensions = { coverage: 0, consistency: 100, freshness: 0, reproducibility: readable.length ? 25 : 0 };
+  const dimensions = { coverage: 0, consistency: 0, freshness: 0, reproducibility: 0 };
   return {
     id: `import-${Date.now()}`,
     name: `我的材料 · ${files.map((file) => file.name).join('、').slice(0, 48)}`,

@@ -1,7 +1,17 @@
 import type { AuditDimensions, ClaimStatus, EvidenceItem, ProjectAudit } from './types';
+import { normalizeFingerprint } from '../features/onboarding/cleanExtractedText';
 
 const clamp = (value: number) => Math.min(100, Math.max(0, value));
 const importanceWeight = { critical: 2, high: 1.5, medium: 1 } as const;
+
+export function findGroundedSource(audit: ProjectAudit, item: EvidenceItem): EvidenceItem | undefined {
+  if (!audit.id.startsWith('import-')) return item;
+  const quote = normalizeFingerprint(item.excerpt);
+  if (quote.length < 8) return undefined;
+  return audit.evidence.find((source) => source.content && source.extractionMethod
+    && (source.id === item.id || (item.sourceFingerprint && source.sourceFingerprint === item.sourceFingerprint) || source.source === item.source)
+    && normalizeFingerprint(source.content).includes(quote));
+}
 
 export function calculateAuditScore(dimensions: AuditDimensions): number {
   const score =
@@ -21,30 +31,44 @@ export function getRiskCounts(audit: ProjectAudit): Record<ClaimStatus, number> 
 
 export function deriveAuditDimensions(audit: ProjectAudit): AuditDimensions {
   const totalWeight = audit.claims.reduce((sum, claim) => sum + importanceWeight[claim.importance], 0);
-  const linked = (claimId: string) => {
-    const claim = audit.claims.find((item) => item.id === claimId);
-    return audit.evidence.filter((item) => claim?.evidenceIds.includes(item.id));
+  if (!totalWeight) return { coverage: 0, consistency: 0, freshness: 0, reproducibility: 0 };
+
+  const sourceFor = (item: EvidenceItem) => findGroundedSource(audit, item);
+  let covered = 0; let consistent = 0; let dated = 0; let reviewable = 0;
+  for (const claim of audit.claims) {
+    const weight = importanceWeight[claim.importance];
+    const linked = audit.evidence.filter((item) => claim.evidenceIds.includes(item.id));
+    const support = claim.status === 'missing' ? [] : linked.filter((item) => (item.relation ?? 'support') === 'support' && sourceFor(item) && (!audit.id.startsWith('import-') || item.reviewedByHuman));
+    if (!support.length) continue;
+    covered += weight;
+    if (claim.status !== 'conflict' && !linked.some((item) => item.relation === 'conflict' && sourceFor(item))) consistent += weight;
+    if (support.some((item) => {
+      const source = sourceFor(item);
+      const fragment = source?.fragments?.find((part) => normalizeFingerprint(part.text).includes(normalizeFingerprint(item.excerpt)));
+      return /(?:19|20)\d{2}[-/.年]\d{1,2}(?:[-/.月]\d{1,2})?/.test(fragment?.text ?? item.excerpt);
+    })) dated += weight;
+    reviewable += weight * (claim.status === 'verified' ? 1 : .5);
+  }
+  return {
+    coverage: Math.round(covered / totalWeight * 100),
+    consistency: Math.round(consistent / totalWeight * 100),
+    freshness: Math.round(dated / totalWeight * 100),
+    reproducibility: Math.round(reviewable / totalWeight * 100),
   };
-  const weightedRatio = (predicate: (claim: ProjectAudit['claims'][number]) => boolean) => totalWeight
-    ? audit.claims.reduce((sum, claim) => sum + (predicate(claim) ? importanceWeight[claim.importance] : 0), 0) / totalWeight * 100
-    : 0;
-  const hasSupport = (claim: ProjectAudit['claims'][number]) => claim.status !== 'missing' && linked(claim.id).some((item) => (item.relation ?? 'support') === 'support');
-  const coverage = weightedRatio(hasSupport);
-  const consistency = totalWeight ? 100 - weightedRatio((claim) => claim.status === 'conflict') : 0;
-  const datedEvidence = audit.evidence.filter((item) => /(?:19|20)\d{2}(?:[-/.年]\d{1,2})?|\d{4}-\d{2}-\d{2}/.test(`${item.source} ${item.content ?? ''} ${item.excerpt}`)).length;
-  const freshness = audit.evidence.length ? datedEvidence / audit.evidence.length * 100 : 0;
-  const reproducibility = totalWeight ? audit.claims.reduce((sum, claim) => {
-    const evidence = linked(claim.id);
-    const traceable = evidence.some((item) => (item.relation ?? 'support') === 'support' && !/分析结果|定位依据/.test(item.source));
-    const value = claim.status === 'verified' ? 100 : traceable ? 50 : 0;
-    return sum + value * importanceWeight[claim.importance];
-  }, 0) / totalWeight : 0;
-  return { coverage: Math.round(coverage), consistency: Math.round(consistency), freshness: Math.round(freshness), reproducibility: Math.round(reproducibility) };
 }
 
 export function recalculateAudit(audit: ProjectAudit): ProjectAudit {
-  const dimensions = deriveAuditDimensions(audit);
-  return { ...audit, dimensions, score: calculateAuditScore(dimensions) };
+  const claims = audit.id.startsWith('import-') ? audit.claims.map((claim) => {
+    const linked = audit.evidence.filter((item) => claim.evidenceIds.includes(item.id));
+    const hasSupport = linked.some((item) => item.relation === 'support' && item.reviewedByHuman && findGroundedSource(audit, item));
+    const hasConflict = linked.some((item) => item.relation === 'conflict' && findGroundedSource(audit, item));
+    if ((claim.status === 'verified' || claim.status === 'weak') && !hasSupport) return { ...claim, status: hasConflict ? 'conflict' as const : 'missing' as const, risk: claim.risk || '原有确认关系缺少可回查的支持原文，需要重新核对。', repair: '请补充可定位原文并重新确认关系。' };
+    if (claim.status === 'conflict' && !hasConflict) return { ...claim, status: hasSupport ? 'weak' as const : 'missing' as const };
+    return claim;
+  }) : audit.claims;
+  const normalized = { ...audit, claims };
+  const dimensions = deriveAuditDimensions(normalized);
+  return { ...normalized, dimensions, score: calculateAuditScore(dimensions) };
 }
 
 export function linkEvidence(
