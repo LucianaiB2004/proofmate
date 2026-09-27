@@ -21,4 +21,4 @@
 
 输入为“七天试点数据显示校园能耗下降 31%，但没有同周期对照数据”。端侧模型输出：结论存在，但缺乏同周期对照，无法确认下降是否真实或可推广，并建议补充非试点校园同期能耗数据。
 
-模型固定到 revision `b467368d16b75df14055562fe927ae8e1f15f7ef`，OpenVINO 2026.4.0、OpenVINO GenAI 2026.4.0.0。以上是本机本次样本，不宣称为普遍性能。原始机器可读结果保存在 `local-ai/benchmark-result.json`；可使用 `scripts/benchmark_openvino.py` 复测。
+模型固定到 revision `b467368d16b75df14055562fe927ae8e1f15f7ef`，OpenVINO 2026.4.0、OpenVINO GenAI 2026.4.0.0。以上是本机本次样本，不宣称为普遍性能。原始机器可读结果保存在开发机的 `local-ai/benchmark-result.json`，未放入提交包；可使用 `scripts/benchmark_openvino.py` 复测。

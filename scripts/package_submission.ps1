@@ -19,11 +19,13 @@ function Test-SubmissionZip([string]$Path) {
     $archive = [System.IO.Compression.ZipFile]::OpenRead($Path)
     try {
         $names = @($archive.Entries | ForEach-Object { $_.FullName.Replace("\", "/") })
-        if ($names -notcontains "作品展示/应用源码/dist/index.html") {
-            throw "提交包缺少生产构建: 作品展示/应用源码/dist/index.html"
+        @("体验说明.md", "作品展示/作品介绍.md", "作品展示/封面.png", "作品展示/界面截图-真实材料复核.png", "作品展示/应用源码/dist/index.html", "AI实践佐证/AI技术实践说明.md", "AI实践佐证/关键代码路径.md") | ForEach-Object {
+            if ($names -notcontains $_) { throw "提交包缺少必要条目: $_" }
         }
+        $unexpected = @($names | Where-Object { $_ -and $_ -notmatch '^(作品展示|AI实践佐证)/' -and $_ -ne '体验说明.md' })
+        if ($unexpected.Count -gt 0) { throw "提交包存在清单之外的根目录条目: $($unexpected -join ', ')" }
         $forbidden = @($names | Where-Object {
-            $_ -match '(^|/)(\.env($|\.)|models?(/|$)|\.venv(/|$)|node_modules(/|$)|__pycache__|\.pytest_cache|test-results|playwright-report|benchmark-result\.json$)'
+            $_ -match '(^|/)(\.env($|\.)|models?(/|$)|\.venv(/|$)|node_modules(/|$)|__pycache__|\.pytest_cache|test-results|playwright-report|benchmark-result\.json$|评委问答|演示脚本|直接粘贴)'
         })
         if ($forbidden.Count -gt 0) {
             throw "提交包包含禁止条目: $($forbidden -join ', ')"
@@ -37,13 +39,11 @@ $requiredFiles = @(
     "体验说明.md",
     "作品介绍.md",
     "AI技术实践说明.md",
-    "演示脚本.md",
-    "评委问答.md",
     "AI实践佐证\README.md",
     "AI实践佐证\prompts.md",
     "AI实践佐证\OpenVINO实机测试.md",
     "作品展示\README.md",
-    "作品展示\界面截图-OpenVINO实机.png",
+    "作品展示\界面截图-真实材料复核.png",
     "封面.png"
 )
 
@@ -94,17 +94,27 @@ if (Test-Path -LiteralPath $stageRoot) {
 }
 New-Item -ItemType Directory -Path $stageRoot -Force | Out-Null
 
-Copy-Item -LiteralPath (Join-Path $submissionRoot "作品展示") -Destination $stageRoot -Recurse
-Copy-Item -LiteralPath (Join-Path $submissionRoot "AI实践佐证") -Destination $stageRoot -Recurse
-Copy-Item -LiteralPath $coverPath -Destination $stageRoot
-@("体验说明.md", "作品介绍.md", "AI技术实践说明.md", "演示脚本.md", "评委问答.md") | ForEach-Object {
-    Copy-Item -LiteralPath (Join-Path $submissionRoot $_) -Destination $stageRoot
+New-Item -ItemType Directory -Path (Join-Path $stageRoot "作品展示"), (Join-Path $stageRoot "AI实践佐证") -Force | Out-Null
+Copy-Item -LiteralPath (Join-Path $submissionRoot "体验说明.md") -Destination $stageRoot
+Copy-Item -LiteralPath $coverPath -Destination (Join-Path $stageRoot "作品展示")
+Copy-Item -LiteralPath (Join-Path $submissionRoot "作品介绍.md") -Destination (Join-Path $stageRoot "作品展示")
+@("README.md", "界面截图-首屏.png", "界面截图-案例展示.png", "界面截图-真实材料复核.png", "界面截图-OpenVINO实机.png") | ForEach-Object {
+    Copy-Item -LiteralPath (Join-Path $submissionRoot "作品展示\$_") -Destination (Join-Path $stageRoot "作品展示")
+}
+Copy-Item -LiteralPath (Join-Path $submissionRoot "AI技术实践说明.md") -Destination (Join-Path $stageRoot "AI实践佐证")
+@("README.md", "prompts.md", "关键代码路径.md", "OpenVINO实机测试.md", "真实百炼联调记录.md", "测试记录.md") | ForEach-Object {
+    Copy-Item -LiteralPath (Join-Path $submissionRoot "AI实践佐证\$_") -Destination (Join-Path $stageRoot "AI实践佐证")
 }
 
 $sourceTarget = Join-Path $stageRoot "作品展示\应用源码"
 New-Item -ItemType Directory -Path $sourceTarget -Force | Out-Null
-@("src", "server", "scripts", "tests", "dist") | ForEach-Object {
+@("src", "server", "tests", "dist") | ForEach-Object {
     Copy-Item -LiteralPath (Join-Path $projectRoot $_) -Destination $sourceTarget -Recurse
+}
+$scriptTarget = Join-Path $sourceTarget "scripts"
+New-Item -ItemType Directory -Path $scriptTarget -Force | Out-Null
+@("download_openvino_model.py", "benchmark_openvino.py") | ForEach-Object {
+    Copy-Item -LiteralPath (Join-Path $projectRoot "scripts\$_") -Destination $scriptTarget
 }
 $localTarget = Join-Path $sourceTarget "local-ai"
 New-Item -ItemType Directory -Path $localTarget -Force | Out-Null
@@ -121,7 +131,7 @@ foreach ($directory in $generatedDirectories) {
     }
     Remove-Item -LiteralPath $directory.FullName -Recurse -Force
 }
-@("package.json", "package-lock.json", "vite.config.ts", "tsconfig.json", "index.html", "README.md", "playwright.config.ts") | ForEach-Object {
+@("package.json", "package-lock.json", "vite.config.ts", "tsconfig.json", "index.html", "playwright.config.ts") | ForEach-Object {
     Copy-Item -LiteralPath (Join-Path $projectRoot $_) -Destination $sourceTarget
 }
 

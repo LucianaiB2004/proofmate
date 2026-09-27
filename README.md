@@ -58,6 +58,6 @@ pwsh -File scripts/package_submission.ps1 -VerifyOnly
 - `server/`：百炼 Qwen、TextIn xParse 与本机凭证安全代理；
 - `local-ai/`：OpenVINO 本地推理服务；
 - `tests/e2e/`：Chrome 主流程与移动端测试；
-- `submission/`：封面、报名文案、演示脚本和 AI 实践佐证。
+- `submission/`：作品封面、体验说明与 AI 实践佐证。
 
 输出用于辅助整理与核验，不替代人工学术判断。
