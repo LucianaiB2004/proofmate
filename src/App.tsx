@@ -32,7 +32,7 @@ export function App() {
           <div className="archive-meta" aria-label="作品档案信息">
             <span>档案编号 TM-AI-2026 / PM-001</span><span><time dateTime="2026-09">2026.09</time> · <strong>作者 LucianaiB</strong></span>
           </div>
-          <p className="eyebrow">天猫 AI 黑客松作品 · Qwen × OpenVINO</p>
+          <p className="eyebrow">TextIn xParse × Qwen × OpenVINO × 天猫 AI</p>
           <h1 id="hero-title">每个结论，都能找到它的证据。</h1>
           <p className="plain-promise">你把答辩材料给我，我帮你找出里面站不住脚的结论和缺少的证据。</p>
           <p className="hero-copy">把论文、代码、数据和截图整理成可追溯的证据档案。AI 发现关系，人审阅并盖章确认。</p>

@@ -1,6 +1,6 @@
 # 真源 ProofMate
 
-天猫 AI 黑客松高校挑战赛作品：基于 Qwen × OpenVINO 的端云协同可信证据系统。百炼 `qwen-plus` 与 OpenVINO Qwen3-4B INT4 均已完成真实联调；百炼发现只有在带原文摘录和材料来源、并经人工确认后，才会进入主张—证据关系档案。
+由 **TextIn xParse × Qwen × OpenVINO × 天猫 AI** 共同构成的端云协同可信证据系统。TextIn xParse 负责读取图片和扫描材料，OpenVINO Qwen3-4B INT4 在本地完成隐私优先的初审，百炼 `qwen-plus` 按需复核尚未解决的主张，天猫 AI 串联完整的作品体验。模型发现只有在带有原文摘录、能够回查材料来源并经人工确认后，才会进入主张—证据关系档案。
 
 ## 快速开始
 
