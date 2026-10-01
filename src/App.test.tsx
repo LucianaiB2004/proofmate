@@ -19,16 +19,27 @@ it('identifies the four core technologies on first render', () => {
   expect(screen.queryByRole('button', { name: /挑战者号发射决策/ })).not.toBeInTheDocument();
 });
 
-it('turns the hosted build into a safe public case experience', async () => {
+it('turns the hosted build into a cloud workspace with temporary provider settings', async () => {
   render(<App publicDemo />);
 
-  expect(screen.getByText('GitHub Pages 公开体验版')).toBeVisible();
-  expect(screen.getByRole('button', { name: '体验公开案例' })).toBeEnabled();
-  expect(screen.queryByRole('button', { name: '开始审查我的材料' })).not.toBeInTheDocument();
+  expect(screen.getByText('GitHub Pages 云端体验版')).toBeVisible();
+  expect(screen.getByRole('button', { name: '开始审查我的材料' })).toBeEnabled();
+  expect(screen.getByLabelText(/选择项目材料/)).toBeInTheDocument();
 
-  await userEvent.click(screen.getByRole('button', { name: '公开版说明' }));
-  expect(screen.getByRole('dialog', { name: '公开体验版说明' })).toBeVisible();
-  expect(screen.queryByLabelText('百炼 API Key')).not.toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: '模型与 OCR 设置' }));
+  expect(screen.getByRole('dialog', { name: '云端模型与 OCR 设置' })).toBeVisible();
+  expect(screen.getByLabelText('百炼 API Key')).toBeInTheDocument();
+});
+
+it('pauses OCR uploads for TextIn settings and resumes without reselecting the file', async () => {
+  render(<App publicDemo />);
+  await userEvent.upload(screen.getByLabelText('选择项目材料'), new File(['pixels'], 'scan.jpg', { type: 'image/jpeg' }));
+  expect(screen.getByRole('dialog', { name: '云端模型与 OCR 设置' })).toHaveTextContent('保存后会自动继续');
+  await userEvent.type(screen.getByLabelText('TextIn App ID'), 'temporary-app');
+  await userEvent.type(screen.getByLabelText('TextIn Secret Code'), 'temporary-secret');
+  await userEvent.click(screen.getByRole('button', { name: '应用到本次页面' }));
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: '正在重建项目的证据链' })).toBeVisible();
 });
 
 it('opens the case gallery as a separate page and can return home', async () => {

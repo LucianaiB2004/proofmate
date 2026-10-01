@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { QwenClaim } from '../../../server/qwenClient';
 import type { ReviewDelta } from '../../domain/reviewMerge';
+import { analyzeWithQwen } from '../../../server/qwenClient';
+import type { BrowserProviderCredentials } from './providerCredentials';
 
 function formatElapsed(seconds: number) {
   const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -8,9 +10,9 @@ function formatElapsed(seconds: number) {
   return `${minutes}:${remainder}`;
 }
 
-export function RuntimePanel({ text, cloudText = text, isDemo = false, publicDemo = false, scopeCount, onAcceptLocalInsight, onAcceptQwenFindings }: { text: string; cloudText?: string; isDemo?: boolean; publicDemo?: boolean; scopeCount?: number; onAcceptLocalInsight?: (summary: string) => ReviewDelta | void; onAcceptQwenFindings?: (claims: QwenClaim[]) => ReviewDelta | void }) {
+export function RuntimePanel({ text, cloudText = text, isDemo = false, publicDemo = false, credentials, scopeCount, onAcceptLocalInsight, onAcceptQwenFindings }: { text: string; cloudText?: string; isDemo?: boolean; publicDemo?: boolean; credentials?: BrowserProviderCredentials; scopeCount?: number; onAcceptLocalInsight?: (summary: string) => ReviewDelta | void; onAcceptQwenFindings?: (claims: QwenClaim[]) => ReviewDelta | void }) {
   const [local, setLocal] = useState(publicDemo ? 'OpenVINO · 仅本地完整版可用' : '正在探测端侧服务…');
-  const [cloud, setCloud] = useState(publicDemo ? 'Qwen · 公开版使用预置案例' : '百炼 API · 等待检测');
+  const [cloud, setCloud] = useState(publicDemo ? '百炼 Qwen · 等待本次页面凭证' : '百炼 API · 等待检测');
   const [busy, setBusy] = useState(false);
   const [localBusy, setLocalBusy] = useState(false);
   const [localElapsed, setLocalElapsed] = useState(0);
@@ -42,14 +44,15 @@ export function RuntimePanel({ text, cloudText = text, isDemo = false, publicDem
     setQwenFindings([]);
     setArchiveResult('');
     try {
-      const response = await fetch('/api/qwen/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: cloudText }) });
-      const result = await response.json();
+      const result = publicDemo
+        ? await analyzeWithQwen({ text: cloudText || text }, fetch, { apiKey: credentials?.dashscopeApiKey, model: credentials?.qwenModel })
+        : await fetch('/api/qwen/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: cloudText }) }).then((response) => response.json());
       if (result.state === 'provider_ready') {
         setCloud(`百炼 Qwen · 返回 ${result.claims.length} 条复核建议`);
         setQwenFindings(result.claims);
         setQwenAccepted(false);
         setLocalInsight('');
-        setReviewTitle('云端复核完成');
+        setReviewTitle(publicDemo && scopeCount === 0 ? 'Qwen 云端初审完成' : '云端复核完成');
         setInsights(result.claims.length
           ? result.claims.map((claim: QwenClaim) => `【结论】${claim.statement}\n【依据】${claim.source}｜${claim.excerpt}\n【风险边界】${claim.risk}\n【下一步】${claim.repair}`)
           : ['没有找到同时具备来源和原文摘录的主张，因此本次没有内容进入待确认档案。可补充正文更完整、来源更明确的材料后重试。']);
@@ -98,9 +101,9 @@ export function RuntimePanel({ text, cloudText = text, isDemo = false, publicDem
     <section className="runtime-panel" aria-labelledby="runtime-title">
       <div className="panel-heading"><div><p className="section-kicker">RUNTIME MATRIX</p><h2 id="runtime-title">端云运行状态</h2></div><span>透明可查</span></div>
       <div className="runtime-grid">
-        <article className="is-on runtime-mode"><span>当前档位</span><strong>{publicDemo ? 'GitHub Pages 公开体验' : isDemo ? '演示模式' : '真实材料模式'}</strong><p>{publicDemo ? '公开案例回放可完整体验证据闭环；模型权重不会上传到公开站点，实时调用请使用本地完整版。' : isDemo ? '内置项目回放；可用右侧按钮验证实时模型。' : '文件提取不是模型分析。OpenVINO 是第一遍模型初审，Qwen 只复核尚未解决的主张。'}</p></article>
+        <article className="is-on runtime-mode"><span>当前档位</span><strong>{publicDemo ? 'GitHub Pages 云端体验' : isDemo ? '演示模式' : '真实材料模式'}</strong><p>{publicDemo ? '云端版保留上传、xParse OCR、Qwen 分析与人工入档；只停用依赖本机模型权重的 OpenVINO 步骤。' : isDemo ? '内置项目回放；可用右侧按钮验证实时模型。' : '文件提取不是模型分析。OpenVINO 是第一遍模型初审，Qwen 只复核尚未解决的主张。'}</p></article>
         <article className={`runtime-instrument${localBusy ? ' is-analyzing' : ''}`}><span className="instrument-label"><i aria-hidden="true" />DEVICE / LOCAL · FIRST PASS</span><h3>本地分析仪</h3><strong>Qwen3-4B INT4</strong><p>{local}</p>{localBusy && <div className="analysis-progress" role="status" aria-live="polite"><span className="analysis-pulse" aria-hidden="true" /><div><strong>正在分析 · {formatElapsed(localElapsed)}</strong><small>{localElapsed < 4 ? '正在读取材料与定位主张' : localElapsed < 12 ? '正在核对证据与风险边界' : '正在整理可执行的补证建议'}</small></div></div>}<button type="button" onClick={analyzeLocal} disabled={publicDemo || localBusy || busy}>{publicDemo ? '本地完整版可用' : localBusy ? `分析中 ${formatElapsed(localElapsed)}` : busy ? '等待云端复核完成' : '使用端侧模型分析'}</button></article>
-        <article className="runtime-instrument"><span className="instrument-label"><i aria-hidden="true" />CLOUD / UNRESOLVED REVIEW</span><h3>云端复核仪</h3><strong>Qwen</strong><p>{cloud}</p>{!isDemo && !publicDemo && <small>复核时会把未解决主张及上传原文片段发给百炼；返回的摘录仍须与原文件逐字核对。</small>}<button type="button" onClick={analyze} disabled={publicDemo || busy || localBusy || scopeCount === 0}>{publicDemo ? '公开版使用案例回放' : busy ? '核验中…' : localBusy ? '等待本地分析完成' : scopeCount !== undefined ? `复核 ${scopeCount} 条未解决主张` : '检测并分析当前材料'}</button></article>
+        <article className="runtime-instrument"><span className="instrument-label"><i aria-hidden="true" />CLOUD / UNRESOLVED REVIEW</span><h3>云端复核仪</h3><strong>Qwen</strong><p>{cloud}</p>{!isDemo && <small>分析时会把待核验主张及上传原文片段发给百炼；返回的摘录仍须与原文件逐字核对。</small>}<button type="button" onClick={analyze} disabled={busy || localBusy || (!publicDemo && scopeCount === 0) || (publicDemo && !credentials?.dashscopeApiKey)}>{busy ? '核验中…' : localBusy ? '等待本地分析完成' : publicDemo && !credentials?.dashscopeApiKey ? '请先配置百炼 API Key' : publicDemo && scopeCount === 0 ? '使用 Qwen 云端初审' : scopeCount !== undefined ? `复核 ${scopeCount} 条未解决主张` : '检测并分析当前材料'}</button></article>
       </div>
       {reviewTitle && <div className="runtime-results" data-testid="human-review-slip" aria-live="polite"><strong>{reviewTitle}</strong><p>{qwenFindings.length || localInsight ? '以下是实时模型建议，确认前不会写入已确认事实。' : '本次运行状态和原因如下。'}</p><ul>{insights.map((item) => <li key={item}>{item}</li>)}</ul>{archiveResult && <p className="review-delta">{archiveResult}</p>}{localInsight && onAcceptLocalInsight && <button type="button" className="accept-insight" disabled={localAccepted} onClick={() => { const delta = onAcceptLocalInsight(localInsight); if (delta) setArchiveResult(delta.added || delta.updated || delta.resolved ? `本轮变化：新增 ${delta.added}、更新 ${delta.updated}、合并 ${delta.merged}、解决 ${delta.resolved}；剩余 ${delta.remaining} 条待复核。` : `本轮无新增变化；剩余 ${delta.remaining} 条待复核。`); setLocalAccepted(true); }}>{localAccepted ? '已加入档案' : '确认并加入档案'}</button>}{qwenFindings.length > 0 && onAcceptQwenFindings && <button type="button" className="accept-insight" disabled={qwenAccepted} onClick={() => { const delta = onAcceptQwenFindings(qwenFindings); if (delta) setArchiveResult(delta.added || delta.updated || delta.resolved ? `本轮变化：新增 ${delta.added}、更新 ${delta.updated}、合并 ${delta.merged}、解决 ${delta.resolved}；剩余 ${delta.remaining} 条待复核。` : `本轮无新增变化；剩余 ${delta.remaining} 条待复核。`); setQwenAccepted(true); }}>{qwenAccepted ? '云端发现已加入档案' : `确认 ${qwenFindings.length} 条云端发现并加入档案`}</button>}</div>}
     </section>

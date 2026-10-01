@@ -23,15 +23,27 @@ it('saves provider credentials without displaying their full values', async () =
   vi.unstubAllGlobals();
 });
 
-it('never accepts credentials in the public hosted experience', () => {
+it('keeps public credentials in parent memory without calling the local settings API', async () => {
   const fetchMock = vi.fn();
   vi.stubGlobal('fetch', fetchMock);
+  const onChange = vi.fn();
 
-  render(<ProviderSettings onClose={() => undefined} publicDemo />);
+  render(<ProviderSettings onClose={() => undefined} publicDemo publicCredentials={{ dashscopeApiKey: '', qwenModel: 'qwen-plus', textinAppId: '', textinSecretCode: '' }} onPublicCredentialsChange={onChange} />);
 
-  expect(screen.getByRole('dialog', { name: '公开体验版说明' })).toBeVisible();
-  expect(screen.getByText(/不会接收、保存或传输 API Key/)).toBeVisible();
-  expect(screen.queryByLabelText('百炼 API Key')).not.toBeInTheDocument();
+  await userEvent.type(screen.getByLabelText('百炼 API Key'), 'temporary-qwen-key');
+  await userEvent.type(screen.getByLabelText('TextIn App ID'), 'temporary-app-id');
+  await userEvent.type(screen.getByLabelText('TextIn Secret Code'), 'temporary-secret');
+  await userEvent.click(screen.getByRole('button', { name: '应用到本次页面' }));
+  expect(onChange).toHaveBeenCalledWith({ dashscopeApiKey: 'temporary-qwen-key', qwenModel: 'qwen-plus', textinAppId: 'temporary-app-id', textinSecretCode: 'temporary-secret' });
+  expect(screen.getByText('已应用到本次页面；刷新页面后自动清除。')).toBeVisible();
   expect(fetchMock).not.toHaveBeenCalled();
   vi.unstubAllGlobals();
+});
+
+it('can explicitly clear credentials kept for the current page', async () => {
+  const onChange = vi.fn();
+  render(<ProviderSettings onClose={() => undefined} publicDemo publicCredentials={{ dashscopeApiKey: 'key', qwenModel: 'qwen-plus', textinAppId: 'app', textinSecretCode: 'secret' }} onPublicCredentialsChange={onChange} />);
+  await userEvent.click(screen.getByRole('button', { name: '清除本次凭证' }));
+  expect(onChange).toHaveBeenCalledWith({ dashscopeApiKey: '', qwenModel: 'qwen-plus', textinAppId: '', textinSecretCode: '' });
+  expect(screen.getByText('本次页面凭证已清除。')).toBeVisible();
 });

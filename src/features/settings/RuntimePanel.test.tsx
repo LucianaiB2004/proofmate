@@ -12,17 +12,20 @@ it('states demo limitations without presenting a fake live call', () => {
   expect(screen.getByRole('heading', { name: '云端复核仪' })).toBeVisible();
 });
 
-it('blocks live model calls in the public hosted experience', () => {
-  const fetchMock = vi.fn();
+it('disables only OpenVINO and runs Qwen directly in the public hosted experience', async () => {
+  const fetchMock = vi.fn(async () => ({
+    ok: true,
+    json: async () => ({ choices: [{ message: { content: JSON.stringify({ claims: [{ statement: '节能 18%', risk: '样本周期较短', repair: '补充对照记录', source: 'report.pdf', excerpt: '试点节能 18%' }] }) } }] }),
+  }));
   vi.stubGlobal('fetch', fetchMock);
 
-  render(<RuntimePanel text="测试材料" isDemo publicDemo />);
+  render(<RuntimePanel text="试点节能 18%" publicDemo credentials={{ dashscopeApiKey: 'temporary-key', qwenModel: 'qwen-plus', textinAppId: '', textinSecretCode: '' }} scopeCount={0} />);
 
-  expect(screen.getByText('GitHub Pages 公开体验')).toBeVisible();
-  expect(screen.getByText(/模型权重不会上传到公开站点/)).toBeVisible();
+  expect(screen.getByText('GitHub Pages 云端体验')).toBeVisible();
   expect(screen.getByRole('button', { name: '本地完整版可用' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: '公开版使用案例回放' })).toBeDisabled();
-  expect(fetchMock).not.toHaveBeenCalled();
+  await userEvent.click(screen.getByRole('button', { name: '使用 Qwen 云端初审' }));
+  expect(await screen.findByText(/【结论】节能 18%/)).toBeVisible();
+  expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('dashscope.aliyuncs.com'), expect.objectContaining({ headers: expect.objectContaining({ Authorization: 'Bearer temporary-key' }) }));
   vi.unstubAllGlobals();
 });
 

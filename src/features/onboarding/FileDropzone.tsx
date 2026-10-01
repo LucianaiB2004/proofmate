@@ -26,7 +26,7 @@ export function FileDropzone({ onFilesAccepted, inputRef }: FileDropzoneProps) {
     <div className="dropzone">
       <span className="dropzone-mark" aria-hidden="true">＋</span>
       <label htmlFor={id}>拖入你的项目材料</label>
-      <input ref={inputRef} id={id} type="file" multiple accept=".pdf,.md,.txt,.csv,.json,.png,.jpg,.jpeg,.webp,.bmp,.tif,.tiff" onChange={(event) => handleFiles(event.target.files)} />
+      <input ref={inputRef} id={id} aria-label="选择项目材料" type="file" multiple accept=".pdf,.md,.txt,.csv,.json,.png,.jpg,.jpeg,.webp,.bmp,.tif,.tiff" onChange={(event) => handleFiles(event.target.files)} />
       <p aria-live="polite">{message}</p>
       <small className="dropzone-processing-note">文本 PDF 在浏览器读取；图片和扫描 PDF 自动使用 TextIn OCR。</small>
       {acceptedNames.length > 0 && <ul className="accepted-materials" data-testid="accepted-materials">{acceptedNames.map((name) => <li key={name}>{name}</li>)}</ul>}

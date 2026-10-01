@@ -1,4 +1,4 @@
-name: Deploy public demo to GitHub Pages
+name: Deploy cloud workspace to GitHub Pages
 
 on:
   push:
@@ -29,7 +29,7 @@ jobs:
         run: npm ci
       - name: Run tests
         run: npm test
-      - name: Build public demo
+      - name: Build cloud workspace
         run: npm run build
         env:
           VITE_PUBLIC_DEMO: 'true'

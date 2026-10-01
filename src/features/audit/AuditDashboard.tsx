@@ -15,8 +15,10 @@ import { parseLocalReviews } from './parseLocalReview';
 import { saveAuditDraft } from '../persistence/auditDraft';
 import { SourceMaterialPanel } from './SourceMaterialPanel';
 import { mergeReviewRound, type ReviewDelta, type ReviewFinding } from '../../domain/reviewMerge';
+import type { BrowserProviderCredentials } from '../settings/providerCredentials';
+import { parseWithTextInBrowser } from '../onboarding/textInBrowserClient';
 
-export function AuditDashboard({ initialAudit, sourceFiles, publicDemo = false }: { initialAudit: ProjectAudit; sourceFiles?: File[]; publicDemo?: boolean }) {
+export function AuditDashboard({ initialAudit, sourceFiles, publicDemo = false, credentials }: { initialAudit: ProjectAudit; sourceFiles?: File[]; publicDemo?: boolean; credentials?: BrowserProviderCredentials }) {
   const [audit, setAudit] = useState(() => recalculateAudit(initialAudit));
   const [availableSourceFiles, setAvailableSourceFiles] = useState<File[]>(sourceFiles ?? []);
   const [selectedId, setSelectedId] = useState(initialAudit.claims[0]?.id ?? '');
@@ -52,7 +54,7 @@ export function AuditDashboard({ initialAudit, sourceFiles, publicDemo = false }
     for (const [index, file] of files.slice(0, 5).entries()) {
       let extracted: ExtractedFile;
       let extractionError = '';
-      try { extracted = await extractFile(file); }
+      try { extracted = await extractFile(file, undefined, publicDemo ? (image) => parseWithTextInBrowser(image, { appId: credentials?.textinAppId ?? '', secretCode: credentials?.textinSecretCode ?? '' }) : undefined); }
       catch (error) {
         extractionError = error instanceof Error ? error.message : '未知解析错误';
         extracted = { text: '', method: error instanceof ExtractionFailure ? error.method : defaultExtractionMethod(file) };
@@ -62,7 +64,9 @@ export function AuditDashboard({ initialAudit, sourceFiles, publicDemo = false }
       if (!text) {
         assessment = { relation: 'unreviewed', excerpt: extractionError ? `解析失败：${extractionError}` : '未读取到可核对正文', reason: extractionError ? '材料已保留在档案中，但解析未完成。请检查 OCR 设置或稍后重试。' : '请改用支持的 PDF、Markdown、TXT、CSV、JSON 或图片文件。', confidence: 0 };
       } else {
-        try {
+        if (publicDemo) {
+          assessment = { relation: 'unreviewed', excerpt: text.slice(0, 260), reason: '云端版已提取原文，请人工确认这份材料与当前主张是支持还是冲突关系', confidence: 0.45 };
+        } else try {
           const response = await fetch('/api/local/evidence', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ claim: selected.statement, evidence: text.slice(0, 12000), source: file.name }) });
           const payload = await response.json();
           if (!payload.result) throw new Error('missing assessment');
@@ -138,7 +142,7 @@ export function AuditDashboard({ initialAudit, sourceFiles, publicDemo = false }
     <main className="cockpit">
       <header className="cockpit-header">
         <div><p className="eyebrow">真源 PROOFMATE · 项目卷宗</p><h1>{audit.name}</h1><p className="dossier-number">档案编号 {archiveNumber} · 审阅日期 2026.09</p></div>
-        <div className="header-actions"><button type="button" onClick={() => downloadMarkdownReport(audit)}>导出答辩摘要</button>{saved && <div className="save-badge"><span aria-hidden="true">✓</span>已自动保存</div>}<div className="runtime-badge"><span />{isDemo ? '演示模式' : '真实材料 · 本地抽取'}</div></div>
+        <div className="header-actions"><button type="button" onClick={() => downloadMarkdownReport(audit)}>导出答辩摘要</button>{saved && <div className="save-badge"><span aria-hidden="true">✓</span>已自动保存</div>}<div className="runtime-badge"><span />{isDemo ? '演示模式' : publicDemo ? '真实材料 · 云端工作区' : '真实材料 · 本地抽取'}</div></div>
       </header>
       <nav className="risk-summary" aria-label="主张状态汇总">
         <span className="verified">{counts.verified} 已证实</span><span className="weak">{counts.weak} 待补证</span><span className="conflict">{counts.conflict} 有冲突</span><span className="missing">{counts.missing} 缺证据</span>
@@ -147,11 +151,11 @@ export function AuditDashboard({ initialAudit, sourceFiles, publicDemo = false }
       {repaired && <div className="audit-stamp is-new" role="status"><span>证据闭环</span><small>HUMAN REVIEWED</small></div>}
       <div className="cockpit-grid">
         <ClaimList claims={audit.claims} selectedId={selected?.id ?? ''} onSelect={setSelectedId} />
-        {selected ? <><EvidenceGraph claim={selected} evidence={audit.evidence} claimPosition={audit.claims.findIndex((claim) => claim.id === selected.id) + 1} claimCount={audit.claims.length} /><RiskInspector claim={selected} evidence={audit.evidence} repaired={repaired} notice={evidenceNotice?.claimId === selected.id ? evidenceNotice : undefined} onRepair={repair} onEvidenceUpload={uploadEvidence} onConfirmEvidence={confirmEvidence} onReviewEvidenceRelation={reviewEvidenceRelation} reviewableEvidenceIds={reviewableEvidenceIds} confirmableEvidenceIds={confirmableEvidenceIds} /></> : <section className="empty-review-state"><p className="section-kicker">MODEL REVIEW / WAITING</p><h2>尚未生成可核验主张</h2><p>文件提取不是模型分析。请先在下方运行 OpenVINO 端侧初审，确认候选后再使用 Qwen 复核未解决项。</p></section>}
+      {selected ? <><EvidenceGraph claim={selected} evidence={audit.evidence} claimPosition={audit.claims.findIndex((claim) => claim.id === selected.id) + 1} claimCount={audit.claims.length} /><RiskInspector claim={selected} evidence={audit.evidence} repaired={repaired} notice={evidenceNotice?.claimId === selected.id ? evidenceNotice : undefined} onRepair={repair} onEvidenceUpload={uploadEvidence} onConfirmEvidence={confirmEvidence} onReviewEvidenceRelation={reviewEvidenceRelation} reviewableEvidenceIds={reviewableEvidenceIds} confirmableEvidenceIds={confirmableEvidenceIds} /></> : <section className="empty-review-state"><p className="section-kicker">MODEL REVIEW / WAITING</p><h2>尚未生成可核验主张</h2><p>文件提取不是模型分析。请先在下方运行 {publicDemo ? 'Qwen 云端初审' : 'OpenVINO 端侧初审'}，确认候选后再继续复核。</p></section>}
       </div>
       <ProcessingTrace items={audit.trace} />
       <SourceMaterialPanel evidence={audit.evidence} sourceFiles={availableSourceFiles} onRelink={(files) => setAvailableSourceFiles((current) => [...current, ...files])} />
-      <RuntimePanel isDemo={isDemo} publicDemo={publicDemo} text={localText} cloudText={cloudText} scopeCount={isDemo ? undefined : unresolved.length} onAcceptLocalInsight={acceptLocalInsight} onAcceptQwenFindings={acceptQwenFindings} />
+      <RuntimePanel isDemo={isDemo} publicDemo={publicDemo} credentials={credentials} text={localText} cloudText={cloudText} scopeCount={isDemo ? undefined : unresolved.length} onAcceptLocalInsight={acceptLocalInsight} onAcceptQwenFindings={acceptQwenFindings} />
     </main>
   );
 }

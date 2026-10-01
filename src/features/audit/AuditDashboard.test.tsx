@@ -146,6 +146,19 @@ describe('evidence cockpit', () => {
     vi.unstubAllGlobals();
   });
 
+  it('keeps evidence upload usable without calling a local model in the cloud workspace', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    render(<AuditDashboard initialAudit={demoProject} publicDemo credentials={{ dashscopeApiKey: '', qwenModel: 'qwen-plus', textinAppId: '', textinSecretCode: '' }} />);
+    await userEvent.click(screen.getByRole('button', { name: /部署模型与评估模型版本完全一致/ }));
+    const inspector = screen.getByRole('region', { name: '风险检查器' });
+    await userEvent.upload(within(inspector).getByLabelText('按建议上传证据文件'), new File(['模型版本 Qwen3-4B INT4'], '版本清单.md', { type: 'text/markdown' }));
+    expect(await within(inspector).findByText('等待人工判断')).toBeVisible();
+    expect(within(inspector).getAllByText(/请人工确认这份材料/)).toHaveLength(2);
+    expect(fetchMock).not.toHaveBeenCalledWith('/api/local/evidence', expect.anything());
+    vi.unstubAllGlobals();
+  });
+
   it('keeps a failed OCR upload visible as an unreviewed material', async () => {
     vi.stubGlobal('fetch', vi.fn(async (url: string) => {
       if (url.includes('local/status')) return { json: async () => ({ state: 'service_ready', model_state: 'ready' }) };
