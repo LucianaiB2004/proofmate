@@ -99,6 +99,7 @@ function proofmateProxyPlugin(defaults: { dashscopeApiKey?: string; textinAppId?
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   return ({
+  base: env.VITE_BASE_PATH || '/',
   plugins: [react(), proofmateProxyPlugin({ dashscopeApiKey: env.DASHSCOPE_API_KEY, textinAppId: env.XPARSE_APP_ID, textinSecretCode: env.XPARSE_SECRET_CODE }, env.QWEN_MODEL ?? 'qwen-plus')],
   server: {
     host: '127.0.0.1',

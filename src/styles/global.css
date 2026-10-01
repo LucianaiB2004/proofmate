@@ -337,6 +337,9 @@ button:focus-visible, input:focus-visible { outline: 3px double var(--audit-red)
 .relink-source { display: inline-flex; margin-top: 8px; padding: 10px 12px; border: 1px solid var(--ink); color: var(--ink); background: var(--paper-raised); font-weight: 800; cursor: pointer; }.relink-source input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 .original-preview .relink-error { color: var(--audit-red); font-weight: 800; }
 .dropzone-processing-note, .evidence-upload-note { display: block; margin-top: .65rem; color: var(--pencil); font-size: .76rem; line-height: 1.45; }
+.public-demo-banner { display: inline-flex; width: fit-content; margin: 0; padding: 7px 10px; border: 1px solid var(--instrument-green); color: var(--instrument-green); background: rgba(19,139,120,.08); font: 700 10px/1.2 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
+.public-demo-start { width: 100%; min-height: 48px; border: 1px solid var(--ink); color: var(--paper); background: var(--instrument-green); font-weight: 900; }
+.public-demo-settings { display: grid; gap: 14px; padding-top: 18px; }.public-demo-settings p { margin: 0; line-height: 1.7; }.public-demo-settings a { width: fit-content; padding: 10px 14px; border: 1px solid var(--ink); color: var(--ink); background: #fffaf0; font-weight: 800; }
 
 @media (max-width: 1100px) {
   .cockpit-grid { grid-template-columns: 1fr 1.35fr; }.risk-panel { grid-column: 1 / -1; }.score-card { grid-template-columns: 150px 1fr; }.dimension-grid { grid-column: 1 / -1; }

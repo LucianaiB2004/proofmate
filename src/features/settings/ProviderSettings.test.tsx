@@ -22,3 +22,16 @@ it('saves provider credentials without displaying their full values', async () =
   expect(screen.getByText(/TextIn xParse.*已配置.*a40/)).toBeVisible();
   vi.unstubAllGlobals();
 });
+
+it('never accepts credentials in the public hosted experience', () => {
+  const fetchMock = vi.fn();
+  vi.stubGlobal('fetch', fetchMock);
+
+  render(<ProviderSettings onClose={() => undefined} publicDemo />);
+
+  expect(screen.getByRole('dialog', { name: '公开体验版说明' })).toBeVisible();
+  expect(screen.getByText(/不会接收、保存或传输 API Key/)).toBeVisible();
+  expect(screen.queryByLabelText('百炼 API Key')).not.toBeInTheDocument();
+  expect(fetchMock).not.toHaveBeenCalled();
+  vi.unstubAllGlobals();
+});

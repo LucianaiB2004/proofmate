@@ -12,6 +12,20 @@ it('states demo limitations without presenting a fake live call', () => {
   expect(screen.getByRole('heading', { name: '云端复核仪' })).toBeVisible();
 });
 
+it('blocks live model calls in the public hosted experience', () => {
+  const fetchMock = vi.fn();
+  vi.stubGlobal('fetch', fetchMock);
+
+  render(<RuntimePanel text="测试材料" isDemo publicDemo />);
+
+  expect(screen.getByText('GitHub Pages 公开体验')).toBeVisible();
+  expect(screen.getByText(/模型权重不会上传到公开站点/)).toBeVisible();
+  expect(screen.getByRole('button', { name: '本地完整版可用' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: '公开版使用案例回放' })).toBeDisabled();
+  expect(fetchMock).not.toHaveBeenCalled();
+  vi.unstubAllGlobals();
+});
+
 it('explains the real-material model order without calling extraction model work', () => {
   render(<RuntimePanel text="已提取正文" scopeCount={0} />);
   expect(screen.getByText(/文件提取不是模型分析/)).toBeVisible();

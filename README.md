@@ -1,5 +1,11 @@
 # 真源 ProofMate
 
+## 在线体验
+
+[打开 GitHub Pages 公开体验版](https://lucianaib2004.github.io/proofmate/)
+
+公开体验版使用已完成真实调用验证的案例回放，可体验主张索引、证据关系、补证和人工确认闭环。OpenVINO 模型权重、TextIn xParse 与百炼凭证不会上传到公开站点；实时模型和 OCR 调用请在本地完整版中运行。
+
 由 **TextIn xParse × Qwen × OpenVINO × 天猫 AI** 共同构成的端云协同可信证据系统。TextIn xParse 负责读取图片和扫描材料，OpenVINO Qwen3-4B INT4 在本地完成隐私优先的初审，百炼 `qwen-plus` 按需复核尚未解决的主张，天猫 AI 串联完整的作品体验。模型发现只有在带有原文摘录、能够回查材料来源并经人工确认后，才会进入主张—证据关系档案。
 
 ## 快速开始

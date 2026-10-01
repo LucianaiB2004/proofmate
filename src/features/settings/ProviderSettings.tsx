@@ -7,10 +7,13 @@ interface Status {
 
 const emptyStatus: Status = { dashscope: { configured: false, hint: '' }, textin: { configured: false, appIdHint: '' } };
 
-export function ProviderSettings({ onClose }: { onClose: () => void }) {
+export function ProviderSettings({ onClose, publicDemo = false }: { onClose: () => void; publicDemo?: boolean }) {
   const [status, setStatus] = useState<Status>(emptyStatus);
   const [message, setMessage] = useState('');
-  useEffect(() => { fetch('/api/settings').then((response) => response.json()).then(setStatus).catch(() => setMessage('暂时无法读取本机设置。')); }, []);
+  useEffect(() => {
+    if (publicDemo) return;
+    fetch('/api/settings').then((response) => response.json()).then(setStatus).catch(() => setMessage('暂时无法读取本机设置。'));
+  }, [publicDemo]);
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const element = event.currentTarget;
@@ -22,7 +25,8 @@ export function ProviderSettings({ onClose }: { onClose: () => void }) {
   };
   return <div className="settings-backdrop" role="presentation">
     <section className="provider-settings" role="dialog" aria-modal="true" aria-labelledby="settings-title">
-      <header><div><p className="section-kicker">LOCAL CREDENTIAL VAULT</p><h2 id="settings-title">模型与 OCR 设置</h2></div><button type="button" onClick={onClose} aria-label="关闭设置">×</button></header>
+      <header><div><p className="section-kicker">{publicDemo ? 'PUBLIC DEMO / SAFE MODE' : 'LOCAL CREDENTIAL VAULT'}</p><h2 id="settings-title">{publicDemo ? '公开体验版说明' : '模型与 OCR 设置'}</h2></div><button type="button" onClick={onClose} aria-label="关闭设置">×</button></header>
+      {publicDemo ? <div className="public-demo-settings"><p>公开体验版不会接收、保存或传输 API Key。模型权重、TextIn xParse 与百炼实时调用只在本地完整版中启用。</p><p>当前页面使用已经完成真实调用验证的公开案例回放，你仍可体验主张、证据、冲突、补证和人工确认闭环。</p><a href="https://github.com/LucianaiB2004/proofmate" target="_blank" rel="noreferrer">查看源码与本地运行说明</a></div> : <>
       <p className="settings-lead">密钥只交给本机开发代理，不会进入前端构建或 Git 仓库。留空表示保留原设置。</p>
       <div className="provider-status"><p>百炼 Qwen · {status.dashscope.configured ? `已配置 ${status.dashscope.hint}` : '未配置'}</p><p>TextIn xParse · {status.textin.configured ? `已配置 ${status.textin.appIdHint}` : '未配置'}</p></div>
       <form onSubmit={submit}>
@@ -32,6 +36,7 @@ export function ProviderSettings({ onClose }: { onClose: () => void }) {
         <button type="submit">保存本机设置</button>
       </form>
       {message && <p className="settings-message" aria-live="polite">{message}</p>}
+      </>}
     </section>
   </div>;
 }

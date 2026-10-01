@@ -16,7 +16,7 @@ import { saveAuditDraft } from '../persistence/auditDraft';
 import { SourceMaterialPanel } from './SourceMaterialPanel';
 import { mergeReviewRound, type ReviewDelta, type ReviewFinding } from '../../domain/reviewMerge';
 
-export function AuditDashboard({ initialAudit, sourceFiles }: { initialAudit: ProjectAudit; sourceFiles?: File[] }) {
+export function AuditDashboard({ initialAudit, sourceFiles, publicDemo = false }: { initialAudit: ProjectAudit; sourceFiles?: File[]; publicDemo?: boolean }) {
   const [audit, setAudit] = useState(() => recalculateAudit(initialAudit));
   const [availableSourceFiles, setAvailableSourceFiles] = useState<File[]>(sourceFiles ?? []);
   const [selectedId, setSelectedId] = useState(initialAudit.claims[0]?.id ?? '');
@@ -151,7 +151,7 @@ export function AuditDashboard({ initialAudit, sourceFiles }: { initialAudit: Pr
       </div>
       <ProcessingTrace items={audit.trace} />
       <SourceMaterialPanel evidence={audit.evidence} sourceFiles={availableSourceFiles} onRelink={(files) => setAvailableSourceFiles((current) => [...current, ...files])} />
-      <RuntimePanel isDemo={isDemo} text={localText} cloudText={cloudText} scopeCount={isDemo ? undefined : unresolved.length} onAcceptLocalInsight={acceptLocalInsight} onAcceptQwenFindings={acceptQwenFindings} />
+      <RuntimePanel isDemo={isDemo} publicDemo={publicDemo} text={localText} cloudText={cloudText} scopeCount={isDemo ? undefined : unresolved.length} onAcceptLocalInsight={acceptLocalInsight} onAcceptQwenFindings={acceptQwenFindings} />
     </main>
   );
 }

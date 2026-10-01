@@ -8,9 +8,9 @@ function formatElapsed(seconds: number) {
   return `${minutes}:${remainder}`;
 }
 
-export function RuntimePanel({ text, cloudText = text, isDemo = false, scopeCount, onAcceptLocalInsight, onAcceptQwenFindings }: { text: string; cloudText?: string; isDemo?: boolean; scopeCount?: number; onAcceptLocalInsight?: (summary: string) => ReviewDelta | void; onAcceptQwenFindings?: (claims: QwenClaim[]) => ReviewDelta | void }) {
-  const [local, setLocal] = useState('正在探测端侧服务…');
-  const [cloud, setCloud] = useState('百炼 API · 等待检测');
+export function RuntimePanel({ text, cloudText = text, isDemo = false, publicDemo = false, scopeCount, onAcceptLocalInsight, onAcceptQwenFindings }: { text: string; cloudText?: string; isDemo?: boolean; publicDemo?: boolean; scopeCount?: number; onAcceptLocalInsight?: (summary: string) => ReviewDelta | void; onAcceptQwenFindings?: (claims: QwenClaim[]) => ReviewDelta | void }) {
+  const [local, setLocal] = useState(publicDemo ? 'OpenVINO · 仅本地完整版可用' : '正在探测端侧服务…');
+  const [cloud, setCloud] = useState(publicDemo ? 'Qwen · 公开版使用预置案例' : '百炼 API · 等待检测');
   const [busy, setBusy] = useState(false);
   const [localBusy, setLocalBusy] = useState(false);
   const [localElapsed, setLocalElapsed] = useState(0);
@@ -22,11 +22,12 @@ export function RuntimePanel({ text, cloudText = text, isDemo = false, scopeCoun
   const [reviewTitle, setReviewTitle] = useState('');
   const [archiveResult, setArchiveResult] = useState('');
   useEffect(() => {
+    if (publicDemo) return;
     fetch('/api/local/status').then((response) => response.json()).then((result) => {
       const device = result.device_name ? `${result.device} · ${result.device_name}` : result.model_state;
       setLocal(result.state === 'service_ready' ? `OpenVINO · ${device}` : 'OpenVINO · 服务未启动');
     }).catch(() => setLocal('OpenVINO · 服务未启动'));
-  }, []);
+  }, [publicDemo]);
   useEffect(() => {
     if (!localBusy) return;
     const timer = window.setInterval(() => setLocalElapsed((value) => value + 1), 1000);
@@ -97,9 +98,9 @@ export function RuntimePanel({ text, cloudText = text, isDemo = false, scopeCoun
     <section className="runtime-panel" aria-labelledby="runtime-title">
       <div className="panel-heading"><div><p className="section-kicker">RUNTIME MATRIX</p><h2 id="runtime-title">端云运行状态</h2></div><span>透明可查</span></div>
       <div className="runtime-grid">
-        <article className="is-on runtime-mode"><span>当前档位</span><strong>{isDemo ? '演示模式' : '真实材料模式'}</strong><p>{isDemo ? '内置项目回放；可用右侧按钮验证实时模型。' : '文件提取不是模型分析。OpenVINO 是第一遍模型初审，Qwen 只复核尚未解决的主张。'}</p></article>
-        <article className={`runtime-instrument${localBusy ? ' is-analyzing' : ''}`}><span className="instrument-label"><i aria-hidden="true" />DEVICE / LOCAL · FIRST PASS</span><h3>本地分析仪</h3><strong>Qwen3-4B INT4</strong><p>{local}</p>{localBusy && <div className="analysis-progress" role="status" aria-live="polite"><span className="analysis-pulse" aria-hidden="true" /><div><strong>正在分析 · {formatElapsed(localElapsed)}</strong><small>{localElapsed < 4 ? '正在读取材料与定位主张' : localElapsed < 12 ? '正在核对证据与风险边界' : '正在整理可执行的补证建议'}</small></div></div>}<button type="button" onClick={analyzeLocal} disabled={localBusy || busy}>{localBusy ? `分析中 ${formatElapsed(localElapsed)}` : busy ? '等待云端复核完成' : '使用端侧模型分析'}</button></article>
-        <article className="runtime-instrument"><span className="instrument-label"><i aria-hidden="true" />CLOUD / UNRESOLVED REVIEW</span><h3>云端复核仪</h3><strong>Qwen</strong><p>{cloud}</p>{!isDemo && <small>复核时会把未解决主张及上传原文片段发给百炼；返回的摘录仍须与原文件逐字核对。</small>}<button type="button" onClick={analyze} disabled={busy || localBusy || scopeCount === 0}>{busy ? '核验中…' : localBusy ? '等待本地分析完成' : scopeCount !== undefined ? `复核 ${scopeCount} 条未解决主张` : '检测并分析当前材料'}</button></article>
+        <article className="is-on runtime-mode"><span>当前档位</span><strong>{publicDemo ? 'GitHub Pages 公开体验' : isDemo ? '演示模式' : '真实材料模式'}</strong><p>{publicDemo ? '公开案例回放可完整体验证据闭环；模型权重不会上传到公开站点，实时调用请使用本地完整版。' : isDemo ? '内置项目回放；可用右侧按钮验证实时模型。' : '文件提取不是模型分析。OpenVINO 是第一遍模型初审，Qwen 只复核尚未解决的主张。'}</p></article>
+        <article className={`runtime-instrument${localBusy ? ' is-analyzing' : ''}`}><span className="instrument-label"><i aria-hidden="true" />DEVICE / LOCAL · FIRST PASS</span><h3>本地分析仪</h3><strong>Qwen3-4B INT4</strong><p>{local}</p>{localBusy && <div className="analysis-progress" role="status" aria-live="polite"><span className="analysis-pulse" aria-hidden="true" /><div><strong>正在分析 · {formatElapsed(localElapsed)}</strong><small>{localElapsed < 4 ? '正在读取材料与定位主张' : localElapsed < 12 ? '正在核对证据与风险边界' : '正在整理可执行的补证建议'}</small></div></div>}<button type="button" onClick={analyzeLocal} disabled={publicDemo || localBusy || busy}>{publicDemo ? '本地完整版可用' : localBusy ? `分析中 ${formatElapsed(localElapsed)}` : busy ? '等待云端复核完成' : '使用端侧模型分析'}</button></article>
+        <article className="runtime-instrument"><span className="instrument-label"><i aria-hidden="true" />CLOUD / UNRESOLVED REVIEW</span><h3>云端复核仪</h3><strong>Qwen</strong><p>{cloud}</p>{!isDemo && !publicDemo && <small>复核时会把未解决主张及上传原文片段发给百炼；返回的摘录仍须与原文件逐字核对。</small>}<button type="button" onClick={analyze} disabled={publicDemo || busy || localBusy || scopeCount === 0}>{publicDemo ? '公开版使用案例回放' : busy ? '核验中…' : localBusy ? '等待本地分析完成' : scopeCount !== undefined ? `复核 ${scopeCount} 条未解决主张` : '检测并分析当前材料'}</button></article>
       </div>
       {reviewTitle && <div className="runtime-results" data-testid="human-review-slip" aria-live="polite"><strong>{reviewTitle}</strong><p>{qwenFindings.length || localInsight ? '以下是实时模型建议，确认前不会写入已确认事实。' : '本次运行状态和原因如下。'}</p><ul>{insights.map((item) => <li key={item}>{item}</li>)}</ul>{archiveResult && <p className="review-delta">{archiveResult}</p>}{localInsight && onAcceptLocalInsight && <button type="button" className="accept-insight" disabled={localAccepted} onClick={() => { const delta = onAcceptLocalInsight(localInsight); if (delta) setArchiveResult(delta.added || delta.updated || delta.resolved ? `本轮变化：新增 ${delta.added}、更新 ${delta.updated}、合并 ${delta.merged}、解决 ${delta.resolved}；剩余 ${delta.remaining} 条待复核。` : `本轮无新增变化；剩余 ${delta.remaining} 条待复核。`); setLocalAccepted(true); }}>{localAccepted ? '已加入档案' : '确认并加入档案'}</button>}{qwenFindings.length > 0 && onAcceptQwenFindings && <button type="button" className="accept-insight" disabled={qwenAccepted} onClick={() => { const delta = onAcceptQwenFindings(qwenFindings); if (delta) setArchiveResult(delta.added || delta.updated || delta.resolved ? `本轮变化：新增 ${delta.added}、更新 ${delta.updated}、合并 ${delta.merged}、解决 ${delta.resolved}；剩余 ${delta.remaining} 条待复核。` : `本轮无新增变化；剩余 ${delta.remaining} 条待复核。`); setQwenAccepted(true); }}>{qwenAccepted ? '云端发现已加入档案' : `确认 ${qwenFindings.length} 条云端发现并加入档案`}</button>}</div>}
     </section>

@@ -19,6 +19,18 @@ it('identifies the four core technologies on first render', () => {
   expect(screen.queryByRole('button', { name: /挑战者号发射决策/ })).not.toBeInTheDocument();
 });
 
+it('turns the hosted build into a safe public case experience', async () => {
+  render(<App publicDemo />);
+
+  expect(screen.getByText('GitHub Pages 公开体验版')).toBeVisible();
+  expect(screen.getByRole('button', { name: '体验公开案例' })).toBeEnabled();
+  expect(screen.queryByRole('button', { name: '开始审查我的材料' })).not.toBeInTheDocument();
+
+  await userEvent.click(screen.getByRole('button', { name: '公开版说明' }));
+  expect(screen.getByRole('dialog', { name: '公开体验版说明' })).toBeVisible();
+  expect(screen.queryByLabelText('百炼 API Key')).not.toBeInTheDocument();
+});
+
 it('opens the case gallery as a separate page and can return home', async () => {
   render(<App />);
   await userEvent.click(screen.getByRole('button', { name: '查看案例展示' }));
