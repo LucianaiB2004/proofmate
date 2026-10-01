@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "xparse-parse": {
+      "source": "intsig-textin/xparse-skills",
+      "sourceType": "github",
+      "skillPath": "skills/xparse-parse/SKILL.md",
+      "computedHash": "50f86d6bfa6ecee3dcad05164823b7141727e53da660f2ae72e17d10008c7293"
+    }
+  }
+}

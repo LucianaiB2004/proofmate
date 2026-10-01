@@ -1,4 +1,4 @@
-const supportedExtensions = new Set(['pdf', 'md', 'txt', 'csv', 'json', 'png', 'jpg', 'jpeg', 'webp']);
+const supportedExtensions = new Set(['pdf', 'md', 'txt', 'csv', 'json', 'png', 'jpg', 'jpeg', 'webp', 'bmp', 'tif', 'tiff']);
 const maxFileSize = 10 * 1024 * 1024;
 
 export type ImportResult =

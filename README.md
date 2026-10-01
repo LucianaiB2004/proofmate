@@ -31,8 +31,14 @@ npm test
 npm run build
 npm run test:e2e
 python -m pytest local-ai/tests -q
-pwsh -File scripts/package_submission.ps1 -VerifyOnly
+pwsh -File scripts/package_dual_submissions.ps1 -VerifyOnly
 ```
+
+## 项目开发过程中使用 WorkBuddy
+
+ProofMate 在开发阶段通过 WorkBuddy 接入项目级 `xparse-parse` Skill。WorkBuddy 用于阅读现有工程、核对 xParse 接入代码、真实解析 NASA O 形环扫描图、检查 Markdown/JSON 输出、协助完成针对性修复与开发文档整理。它是项目开发与验证工具，不是 ProofMate 的运行时依赖；用户直接启动 ProofMate 即可完成材料上传、OCR、端侧初审、云端复核和人工入档。
+
+真实调用记录、开发检查报告与公开截图位于 [`submission-textin/evidence/workbuddy-development/`](submission-textin/evidence/workbuddy-development/) 和 [`submission-textin/evidence/workbuddy-screenshots/`](submission-textin/evidence/workbuddy-screenshots/)。
 
 ## 可选 AI 能力
 
@@ -48,9 +54,9 @@ pwsh -File scripts/package_submission.ps1 -VerifyOnly
 评分是材料审查进度，不代表事实真伪的概率。总分按覆盖度 35%、一致性 25%、时间信息 15%、复核完成度 25% 加权；每条主张再按核心 2、高 1.5、普通 1 加权。支持摘录必须能在上传的原文件中找到，并由人确认关系，否则只是待核对线索，不计分。没有有效支持时，一致性也为 0；时间信息只看支持摘录或同一段落里的日期；人工确认原文关系后计半额复核进度，主张最终审阅完成后计满。页面上的“评分怎么算”可展开查看当前四项数值与公式。云端复核会发送未解决主张和上传原文片段，并在入档前逐字核验摘录来源。
 
 - 百炼 Qwen：点击页面右下角“模型与 OCR 设置”，填写用户自己的 API Key；也可复制 `.env.example` 为 `.env.local`。
-- TextIn xParse：设置页可管理用户自己的 App ID 与 Secret Code。图片经本机代理交给 xParse，返回的 OCR Markdown 会继续参与主张与证据核验；默认使用 `--api auto` 免费优先路由，不会自动切换到付费模式。
+- TextIn xParse：设置页可管理用户自己的 App ID 与 Secret Code。图片和没有可用文本层的扫描 PDF 会整份经本机代理提交给 xParse，返回的 OCR Markdown 会继续参与主张与证据核验；默认使用 `--api auto` 免费优先路由，不会自动切换到付费模式。
 - OpenVINO：参见 [`local-ai/README.md`](local-ai/README.md)，推荐 Qwen3-4B INT4、CPU 设备。
-- PDF：正文在浏览器内由 PDF.js 解析，原始文件无需上传。
+- PDF：带有可用文本层的普通 PDF 由 PDF.js 在浏览器内解析，不上传原文件；没有可用文本层的扫描 PDF 会转交 TextIn xParse OCR。
 
 ## 项目结构
 
@@ -59,5 +65,7 @@ pwsh -File scripts/package_submission.ps1 -VerifyOnly
 - `local-ai/`：OpenVINO 本地推理服务；
 - `tests/e2e/`：Chrome 主流程与移动端测试；
 - `submission/`：作品封面、体验说明与 AI 实践佐证。
+- `submission-textin/`：TextIn xParse 赛道说明书、真实调用记录与 WorkBuddy 开发过程证据；
+- `scripts/package_dual_submissions.ps1`：分别生成并校验天猫 AI 与 TextIn xParse 两个作品包。
 
 输出用于辅助整理与核验，不替代人工学术判断。

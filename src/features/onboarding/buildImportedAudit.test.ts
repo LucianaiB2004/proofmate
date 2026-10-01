@@ -22,6 +22,25 @@ it('labels a failed image OCR without pretending to read its contents', async ()
   expect(audit.trace.some((item) => item.detail.includes('photo.png'))).toBe(true);
 });
 
+it('distinguishes an empty OCR result from a failed call and from an unread browser file', async () => {
+  const emptyOcr = await buildImportedAudit([new File(['pixels'], 'blank-scan.png', { type: 'image/png' })], async () => '   ');
+  expect(emptyOcr.evidence[0].excerpt).toContain('没有识别到可核对文字');
+  expect(emptyOcr.evidence[0].excerpt).not.toContain('解析失败');
+
+  const failedOcr = await buildImportedAudit([new File(['pixels'], 'broken-scan.png', { type: 'image/png' })], async () => { throw new Error('TextIn xParse 超过 120 秒仍未返回结果'); });
+  expect(failedOcr.evidence[0].excerpt).toContain('xParse OCR 解析失败：TextIn xParse 超过 120 秒');
+
+  const emptyPdf = await buildImportedAudit([new File(['pdf'], 'blank.pdf', { type: 'application/pdf' })], async () => '');
+  expect(emptyPdf.evidence[0].excerpt).toBe('浏览器已完成文件清点；材料未提取到可核对文字。');
+});
+
+it('marks scanner image formats as image evidence routed through xParse', async () => {
+  const audit = await buildImportedAudit([new File(['pixels'], 'scan.tif')], async () => '扫描件正文：O 形环密封性能记录。');
+  expect(audit.evidence[0].kind).toBe('image');
+  expect(audit.evidence[0].extractionMethod).toBe('xparse-ocr');
+  expect(audit.evidence[0].content).toContain('O 形环密封性能记录');
+});
+
 it('records successful xParse OCR as a traceable image source', async () => {
   const file = new File(['pixels'], 'deployment.png', { type: 'image/png' });
   const audit = await buildImportedAudit([file], async () => '部署记录显示模型版本 Qwen3-4B INT4。');

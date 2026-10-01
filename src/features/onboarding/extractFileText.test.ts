@@ -1,4 +1,4 @@
-import { extractFile, extractFileText } from './extractFileText';
+import { extractFile, extractFileText, isImageFile } from './extractFileText';
 
 it('reads browser-native text formats directly', async () => {
   const file = new File(['真实实验结论'], 'report.md', { type: 'text/markdown' });
@@ -36,4 +36,17 @@ it('delegates image extraction to xParse OCR', async () => {
   const imageExtractor = vi.fn().mockResolvedValue('# 部署记录\n模型版本 Qwen3-4B INT4');
   await expect(extractFileText(file, undefined, imageExtractor)).resolves.toContain('模型版本');
   expect(imageExtractor).toHaveBeenCalledWith(file);
+});
+
+it('routes every xParse-supported image format to OCR, including scanner output', async () => {
+  for (const name of ['scan.png', 'scan.jpg', 'scan.jpeg', 'scan.webp', 'scan.bmp', 'scan.tif', 'scan.tiff']) {
+    const imageExtractor = vi.fn().mockResolvedValue('扫描正文');
+    await expect(extractFile(new File(['pixels'], name), undefined, imageExtractor)).resolves.toEqual({ text: '扫描正文', method: 'xparse-ocr' });
+    expect(imageExtractor).toHaveBeenCalledOnce();
+  }
+});
+
+it('does not claim images outside the supported set', () => {
+  expect(isImageFile('scan.tiff')).toBe(true);
+  expect(isImageFile('vector.svg')).toBe(false);
 });

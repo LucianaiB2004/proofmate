@@ -12,7 +12,12 @@ export function sourceFileFingerprint(file: File) {
 }
 
 const directTextExtensions = new Set(['md', 'txt', 'csv', 'json']);
-const imageExtensions = new Set(['png', 'jpg', 'jpeg', 'webp']);
+const imageExtensions = new Set(['png', 'jpg', 'jpeg', 'webp', 'bmp', 'tif', 'tiff']);
+
+/** 与 server/xparseClient.ts 的 supportedExtensions 保持一致，避免扫描件在进入 xParse 之前被丢掉。 */
+export function isImageFile(name: string) {
+  return imageExtensions.has(name.split('.').pop()?.toLowerCase() ?? '');
+}
 
 async function extractPdf(file: File): Promise<string> {
   const pdfjs = await import('pdfjs-dist');

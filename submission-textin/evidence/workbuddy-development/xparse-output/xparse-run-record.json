@@ -1,0 +1,74 @@
+{
+  "skill": "xparse-parse",
+  "skill_source": "intsig-textin/xparse-skills (project-level, .codebuddy/skills/xparse-parse/SKILL.md)",
+  "cli": {
+    "name": "xparse-cli",
+    "version": "2.5.0",
+    "path": "C:/Users/lucianaib/AppData/Roaming/npm/xparse-cli",
+    "profile": "workbuddy",
+    "api_routing": "auto (free-first; 未自动切换到付费模式)"
+  },
+  "executed_at": "2026-10-01T10:07:53+08:00",
+  "input": {
+    "path": "ProofMate-真实案例-挑战者号/03-NASA-O形环风险图表.jpg",
+    "bytes": 91248,
+    "sha256": "6c4ce3f20e843c33267c94f66911bf207b191136b3b5d8c668f1ec2d436718aa",
+    "filetype": "image/jpeg"
+  },
+  "runs": [
+    {
+      "index": 1,
+      "view": "markdown",
+      "command": "xparse-cli parse \"ProofMate-真实案例-挑战者号/03-NASA-O形环风险图表.jpg\" --api auto --profile workbuddy --task-context tmp/xparse-task-context.json --output submission-textin/evidence/workbuddy-development/xparse-output",
+      "status": "success",
+      "exit_code": 0,
+      "wall_clock_ms": 3813,
+      "stdout": "",
+      "stderr": "",
+      "output": {
+        "path": "submission-textin/evidence/workbuddy-development/xparse-output/03-NASA-O形环风险图表.md",
+        "bytes": 1596,
+        "sha256": "03b1efaeba4854075db3ea045a4d1fa712dee3e0ce43f6cee45f95dc4a39f2de"
+      }
+    },
+    {
+      "index": 2,
+      "view": "json",
+      "command": "xparse-cli parse \"ProofMate-真实案例-挑战者号/03-NASA-O形环风险图表.jpg\" --api auto --profile workbuddy --view json --output submission-textin/evidence/workbuddy-development/xparse-output",
+      "status": "success",
+      "exit_code": 0,
+      "wall_clock_ms": 4230,
+      "stdout": "",
+      "stderr": "",
+      "service": {
+        "code": 200,
+        "message": "success",
+        "schema_version": "1.4.0",
+        "x_request_id": "9ba4b7ecf55582d9a4f764bd776f8393",
+        "file_id": "f88067767b5d49aa89fa548a5f7a27e8",
+        "job_id": "bb629f842b81482382135085a3cd4e04",
+        "success_count": 1,
+        "page_count": 1,
+        "duration_ms": 1689,
+        "elements": 14,
+        "element_types": ["NarrativeText", "Table", "Title"]
+      },
+      "output": {
+        "path": "submission-textin/evidence/workbuddy-development/xparse-output/03-NASA-O形环风险图表.json",
+        "bytes": 19569,
+        "sha256": "b3830e4c61fdef6c6e8800e11e7d37cef795a8c9fd5f212cc32b7b3673368cc6"
+      }
+    }
+  ],
+  "quota_evidence": {
+    "before": { "authenticated": false, "daily_pages_used": 0, "daily_pages_remaining": 1000 },
+    "after": { "authenticated": false, "daily_pages_used": 2, "daily_pages_remaining": 998, "reset_at": "2026-10-02T00:00:00+08:00" }
+  },
+  "keyword_check": {
+    "O-RING": { "found": true, "evidence": "0BENCH TESTING SHOWED CAPABILITY TO MAINTAIN O-RING CONTACT DURING IHITIAL PHASE (0-170 NS) OF TRANSIENT" },
+    "temperature": { "found": true, "evidence": "Boisjoly's Chart 2-2 indicating concern about temperature ef-fect on seal actuation time (handwritten)." },
+    "secondary seal": { "found": true, "evidence": "EROSION PENETRATION OF PRIIARY SEAL REQUIRES RELIABLE SECONDARY SEAL FOR PRESSURE INTEGRITY" },
+    "low-temperature effect on O-ring sealing time": { "found": true, "evidence": "Temperature Lower Than Current Data Base / Results in Changing Primary O-Ring Sealing Timing Function" },
+    "secondary seal capability degrading across the time window": { "found": true, "evidence": "(0-170 MS) HIGH PROBABILITY OF RELLABLE SECONDARY SEAL -> (170-330 MS) REDUCED PRODABILITY OF RELIABLE SECONDARY SEAL -> (330-600 MS) HIGH PROBABILITY OF NO SECONDARY SEAL CAPABILITY" }
+  }
+}

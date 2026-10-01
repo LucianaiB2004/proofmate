@@ -28,4 +28,11 @@ describe('project file validation', () => {
       ignored: ['tool.exe'],
     });
   });
+
+  it('accepts scanner image formats so they can reach xParse OCR', () => {
+    expect(validateFiles([fakeFile('scan.tif'), fakeFile('scan.tiff'), fakeFile('scan.bmp')])).toMatchObject({
+      ok: true,
+      ignored: [],
+    });
+  });
 });

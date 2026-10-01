@@ -1,0 +1,16 @@
+NASA 罗杰斯委员会公开资料摘录（中文整理）
+
+证据 A：O 形环历史记录
+NASA 页面记录：在受检的 171 个 field joints 中，6 个出现主 O 形环侵蚀，2 个在主 O 形环后方发现烟灰。
+来源：https://www.nasa.gov/history/rogersrep/v4p370.htm
+
+证据 B：低温与密封材料
+NASA 听证材料专门展示了 O 形环硬度与温度的关系，以及 secondary O-ring resiliency，说明温度是需要被单独审查的工程变量。
+来源：https://www.nasa.gov/history/rogersrep/v4p668.htm
+
+证据 C：调查委员会结论
+罗杰斯委员会报告认为发射决策存在缺陷，关键决策者没有掌握 O 形环问题的完整历史。
+来源：https://sma.nasa.gov/SignificantIncidents/assets/rogers_commission_report.pdf
+
+证据 D：材料边界
+这些公开资料能够证明此前存在侵蚀、烟灰和低温风险讨论，但不能单独证明每一名决策者实际阅读了哪些文件。若要证明信息已完整传递，还需要会议纪要、材料签收、风险升级记录和最终决策记录。

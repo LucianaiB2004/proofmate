@@ -1,0 +1,493 @@
+{
+  "code": 200,
+  "message": "success",
+  "x_request_id": "9ba4b7ecf55582d9a4f764bd776f8393",
+  "data": {
+    "schema_version": "1.4.0",
+    "file_id": "f88067767b5d49aa89fa548a5f7a27e8",
+    "job_id": "bb629f842b81482382135085a3cd4e04",
+    "success_count": 1,
+    "metadata": {
+      "filename": "03-NASA-O形环风险图表.jpg",
+      "filetype": "image/jpeg",
+      "page_count": 1
+    },
+    "markdown": "# PRINARY CONCEPNS\n\n# 。FIELD JOINT-HIGIEST CONCEPN\n\nEROSION PENETRATION OF PRIIARY SEAL REQUIRES RELIABLE SECONDARY SEAL FOR PRESSURE INTEGRITY\n\no IGNITION TRANSIENT-(0-600 MS)\n\n0(0-170 IS)HIGH PROBABILITY OF RELLABLE SECONDARY SEAL\n\n0(170-330 MS) REDUCED PRODABILITY OF RELIABLE SECONDARY SEAL\n\n0(330-600 MS) HIGH PROBABILITY OF NO SECONDARY SEAL CAPABILITY\n\n0STEADY STATE-(600 NS-2 MINUTES)\n\n。 IF EROSION PENETRATES PRIMARY O-RING SEAL-HIGH PROBABILITY CF NO SECONDARY SEAL CAPADILITY\n\nBENCH TESTINGSHOHED O-RING NOT CAPABLE OF MAINTATNING CONTACT WITH METAL PARTS GAP OPENING RATE TO NEOP\n\n0BENCH TESTING SHOWED CAPABILITY TO MAINTAIN O-RING CONTACT DURING IHITIAL PHASE (0-170 NS) OF TRANSIENT\n\nChart 2-1 presented by Thiokol's Roger Boisjoly summarizing primary concerns with the field joint and its O-ring seals on the boosters.\n\nBoisjoly's Chart 2-2 indicating concern about temperature ef-fect on seal actuation time (handwritten).\n\n\u003ctable border=\"1\" \u003e\u003ctr\u003e\n\u003ctd\u003eJoint Primary Concerns SRM 25 ■A Temperature Lower Than Current Data Base\u003cbr\u003eResults in Changing Primary O-Ring Sealing Timing\u003cbr\u003eFunction\u003cbr\u003e■SRM 15A-80° ARC Black Grease Between\u003cbr\u003eO-Rings\u003cbr\u003eSRM 15B-110° ARC Black Grease Between\u003cbr\u003eO-Rings\u003cbr\u003e■Lower O-Ring squeeze due to lower temp.\u003cbr\u003e■Higher O-Ring shore hardness\u003cbr\u003e■Thicker grease viscosity\u003cbr\u003e■Higher O-Ring pressure actuation time\u003cbr\u003e■If actuation time increases,threshold of secondary\u003cbr\u003eseal pressurization capability is approached\u003cbr\u003e■If threshold is reached then secondary seal may not\u003cbr\u003ebe capable of being pressurized\u003c/td\u003e\n\u003c/tr\u003e\u003c/table\u003e\n\n",
+    "elements": [
+      {
+        "coordinates": [
+          0.04507,
+          0.089866,
+          0.13615,
+          0.086042,
+          0.135211,
+          0.107075,
+          0.044131,
+          0.110899
+        ],
+        "element_id": "4d915438337b4c8d4fbc8e95c5cb157a3108946724dcac6f84c1abfee0f1e353",
+        "metadata": {
+          "category_depth": 0,
+          "children_ids": [],
+          "data_source": {
+            "record_locator": {
+              "protocol": "file",
+              "remote_file_path": "temp/03-NASA-O形环风险图表.jpg"
+            },
+            "url": "file://temp/03-NASA-O形环风险图表.jpg"
+          },
+          "is_continuation": false
+        },
+        "page_number": 1,
+        "text": "PRINARY CONCEPNS",
+        "type": "Title"
+      },
+      {
+        "coordinates": [
+          0.021596,
+          0.162524,
+          0.207512,
+          0.162524,
+          0.207512,
+          0.191205,
+          0.021596,
+          0.191205
+        ],
+        "element_id": "bca3e2e221d4e9c0d402c748d508ee67f051c6047f5af71022828c455dbc6c86",
+        "metadata": {
+          "category_depth": 0,
+          "children_ids": [
+            "2a1a457f88fe44375e8937f582e9e619754b3f7792bd3eab6d74e0b448e2d051",
+            "3fde6d285c2d71e41b887934489b2a05f2e7d688e65b9c1a0f3cea2552c86103",
+            "c1f2b38acc636242a1080cfb3f661cff3e1726c9ae01e6be3162808a252263f5",
+            "57a13d684bc7f0e956c8f57d01220d3e0b65867599417edf05a3d473c2964ba9",
+            "e9fa5f099b29425507ef04264b85bcfcd58a1cce994af749c254d1ab2ec966e3",
+            "e6539bf2d61f80cc1721d9123b9b081134098da5fbd2aa40bf7b65ce3b5b4c41",
+            "64ae04307e44e9d8de5f60fb688f38e8cce9d0e96a1a2c17d5d392669489b1c1",
+            "8ddcc4157c15b74d62553c0f62bd623bde7b47d096087df6e3f2ccc4937d61e9",
+            "6bd2b148ad4c364c0557f38fafa91335fa8ec2a581e7ed09a343391327620ae5",
+            "88022c47b7f67d19db70a490e6c8148d0abcf5474fc83700df5ac94001f32720",
+            "1c121933dc591a02f6ab1d61448a2a997519b704e49f1a8c024b5afe2731763f",
+            "4d3dc53f47f5d27fdd7b6b95f7cf9add73753b5e1bf03049b3b2f6030af3e7a2"
+          ],
+          "data_source": {
+            "record_locator": {
+              "protocol": "file",
+              "remote_file_path": "temp/03-NASA-O形环风险图表.jpg"
+            },
+            "url": "file://temp/03-NASA-O形环风险图表.jpg"
+          },
+          "is_continuation": false
+        },
+        "page_number": 1,
+        "text": "。FIELD JOINT-HIGIEST CONCEPN",
+        "type": "Title"
+      },
+      {
+        "coordinates": [
+          0.067606,
+          0.235182,
+          0.439437,
+          0.235182,
+          0.439437,
+          0.294455,
+          0.067606,
+          0.294455
+        ],
+        "element_id": "2a1a457f88fe44375e8937f582e9e619754b3f7792bd3eab6d74e0b448e2d051",
+        "metadata": {
+          "category_depth": -1,
+          "data_source": {
+            "record_locator": {
+              "protocol": "file",
+              "remote_file_path": "temp/03-NASA-O形环风险图表.jpg"
+            },
+            "url": "file://temp/03-NASA-O形环风险图表.jpg"
+          },
+          "is_continuation": false,
+          "parent_id": "bca3e2e221d4e9c0d402c748d508ee67f051c6047f5af71022828c455dbc6c86"
+        },
+        "page_number": 1,
+        "text": "EROSION PENETRATION OF PRIIARY SEAL REQUIRES RELIABLE SECONDARY SEAL FOR PRESSURE INTEGRITY",
+        "type": "NarrativeText"
+      },
+      {
+        "coordinates": [
+          0.068545,
+          0.309751,
+          0.260094,
+          0.309751,
+          0.260094,
+          0.330784,
+          0.068545,
+          0.330784
+        ],
+        "element_id": "3fde6d285c2d71e41b887934489b2a05f2e7d688e65b9c1a0f3cea2552c86103",
+        "metadata": {
+          "category_depth": -1,
+          "data_source": {
+            "record_locator": {
+              "protocol": "file",
+              "remote_file_path": "temp/03-NASA-O形环风险图表.jpg"
+            },
+            "url": "file://temp/03-NASA-O形环风险图表.jpg"
+          },
+          "is_continuation": false,
+          "parent_id": "bca3e2e221d4e9c0d402c748d508ee67f051c6047f5af71022828c455dbc6c86"
+        },
+        "page_number": 1,
+        "text": "o IGNITION TRANSIENT-(0-600 MS)",
+        "type": "NarrativeText"
+      },
+      {
+        "coordinates": [
+          0.089202,
+          0.344168,
+          0.402817,
+          0.344168,
+          0.402817,
+          0.372849,
+          0.089202,
+          0.372849
+        ],
+        "element_id": "c1f2b38acc636242a1080cfb3f661cff3e1726c9ae01e6be3162808a252263f5",
+        "metadata": {
+          "category_depth": -1,
+          "data_source": {
+            "record_locator": {
+              "protocol": "file",
+              "remote_file_path": "temp/03-NASA-O形环风险图表.jpg"
+            },
+            "url": "file://temp/03-NASA-O形环风险图表.jpg"
+          },
+          "is_continuation": false,
+          "parent_id": "bca3e2e221d4e9c0d402c748d508ee67f051c6047f5af71022828c455dbc6c86"
+        },
+        "page_number": 1,
+        "text": "0(0-170 IS)HIGH PROBABILITY OF RELLABLE SECONDARY SEAL",
+        "type": "NarrativeText"
+      },
+      {
+        "coordinates": [
+          0.090141,
+          0.382409,
+          0.43662,
+          0.378585,
+          0.435681,
+          0.399618,
+          0.089202,
+          0.403442
+        ],
+        "element_id": "57a13d684bc7f0e956c8f57d01220d3e0b65867599417edf05a3d473c2964ba9",
+        "metadata": {
+          "category_depth": -1,
+          "data_source": {
+            "record_locator": {
+              "protocol": "file",
+              "remote_file_path": "temp/03-NASA-O形环风险图表.jpg"
+            },
+            "url": "file://temp/03-NASA-O形环风险图表.jpg"
+          },
+          "is_continuation": false,
+          "parent_id": "bca3e2e221d4e9c0d402c748d508ee67f051c6047f5af71022828c455dbc6c86"
+        },
+        "page_number": 1,
+        "text": "0(170-330 MS) REDUCED PRODABILITY OF RELIABLE SECONDARY SEAL",
+        "type": "NarrativeText"
+      },
+      {
+        "coordinates": [
+          0.090141,
+          0.416826,
+          0.442254,
+          0.413002,
+          0.441315,
+          0.435946,
+          0.089202,
+          0.439771
+        ],
+        "element_id": "e9fa5f099b29425507ef04264b85bcfcd58a1cce994af749c254d1ab2ec966e3",
+        "metadata": {
+          "category_depth": -1,
+          "data_source": {
+            "record_locator": {
+              "protocol": "file",
+              "remote_file_path": "temp/03-NASA-O形环风险图表.jpg"
+            },
+            "url": "file://temp/03-NASA-O形环风险图表.jpg"
+          },
+          "is_continuation": false,
+          "parent_id": "bca3e2e221d4e9c0d402c748d508ee67f051c6047f5af71022828c455dbc6c86"
+        },
+        "page_number": 1,
+        "text": "0(330-600 MS) HIGH PROBABILITY OF NO SECONDARY SEAL CAPABILITY",
+        "type": "NarrativeText"
+      },
+      {
+        "coordinates": [
+          0.047887,
+          0.493308,
+          0.261972,
+          0.493308,
+          0.261972,
+          0.518164,
+          0.047887,
+          0.518164
+        ],
+        "element_id": "e6539bf2d61f80cc1721d9123b9b081134098da5fbd2aa40bf7b65ce3b5b4c41",
+        "metadata": {
+          "category_depth": -1,
+          "data_source": {
+            "record_locator": {
+              "protocol": "file",
+              "remote_file_path": "temp/03-NASA-O形环风险图表.jpg"
+            },
+            "url": "file://temp/03-NASA-O形环风险图表.jpg"
+          },
+          "is_continuation": false,
+          "parent_id": "bca3e2e221d4e9c0d402c748d508ee67f051c6047f5af71022828c455dbc6c86"
+        },
+        "page_number": 1,
+        "text": "0STEADY STATE-(600 NS-2 MINUTES)",
+        "type": "NarrativeText"
+      },
+      {
+        "coordinates": [
+          0.070423,
+          0.525813,
+          0.438498,
+          0.525813,
+          0.438498,
+          0.585086,
+          0.070423,
+          0.585086
+        ],
+        "element_id": "64ae04307e44e9d8de5f60fb688f38e8cce9d0e96a1a2c17d5d392669489b1c1",
+        "metadata": {
+          "category_depth": -1,
+          "data_source": {
+            "record_locator": {
+              "protocol": "file",
+              "remote_file_path": "temp/03-NASA-O形环风险图表.jpg"
+            },
+            "url": "file://temp/03-NASA-O形环风险图表.jpg"
+          },
+          "is_continuation": false,
+          "parent_id": "bca3e2e221d4e9c0d402c748d508ee67f051c6047f5af71022828c455dbc6c86"
+        },
+        "page_number": 1,
+        "text": "。 IF EROSION PENETRATES PRIMARY O-RING SEAL-HIGH PROBABILITY CF NO SECONDARY SEAL CAPADILITY",
+        "type": "NarrativeText"
+      },
+      {
+        "coordinates": [
+          0.090141,
+          0.592734,
+          0.45446,
+          0.592734,
+          0.45446,
+          0.655832,
+          0.090141,
+          0.655832
+        ],
+        "element_id": "8ddcc4157c15b74d62553c0f62bd623bde7b47d096087df6e3f2ccc4937d61e9",
+        "metadata": {
+          "category_depth": -1,
+          "data_source": {
+            "record_locator": {
+              "protocol": "file",
+              "remote_file_path": "temp/03-NASA-O形环风险图表.jpg"
+            },
+            "url": "file://temp/03-NASA-O形环风险图表.jpg"
+          },
+          "is_continuation": false,
+          "parent_id": "bca3e2e221d4e9c0d402c748d508ee67f051c6047f5af71022828c455dbc6c86"
+        },
+        "page_number": 1,
+        "text": "BENCH TESTINGSHOHED O-RING NOT CAPABLE OF MAINTATNING CONTACT WITH METAL PARTS GAP OPENING RATE TO NEOP",
+        "type": "NarrativeText"
+      },
+      {
+        "coordinates": [
+          0.092958,
+          0.671128,
+          0.470423,
+          0.671128,
+          0.470423,
+          0.728489,
+          0.092958,
+          0.728489
+        ],
+        "element_id": "6bd2b148ad4c364c0557f38fafa91335fa8ec2a581e7ed09a343391327620ae5",
+        "metadata": {
+          "category_depth": -1,
+          "data_source": {
+            "record_locator": {
+              "protocol": "file",
+              "remote_file_path": "temp/03-NASA-O形环风险图表.jpg"
+            },
+            "url": "file://temp/03-NASA-O形环风险图表.jpg"
+          },
+          "is_continuation": false,
+          "parent_id": "bca3e2e221d4e9c0d402c748d508ee67f051c6047f5af71022828c455dbc6c86"
+        },
+        "page_number": 1,
+        "text": "0BENCH TESTING SHOWED CAPABILITY TO MAINTAIN O-RING CONTACT DURING IHITIAL PHASE (0-170 NS) OF TRANSIENT",
+        "type": "NarrativeText"
+      },
+      {
+        "coordinates": [
+          0.014085,
+          0.780115,
+          0.484507,
+          0.780115,
+          0.484507,
+          0.887189,
+          0.014085,
+          0.887189
+        ],
+        "element_id": "88022c47b7f67d19db70a490e6c8148d0abcf5474fc83700df5ac94001f32720",
+        "metadata": {
+          "category_depth": -1,
+          "data_source": {
+            "record_locator": {
+              "protocol": "file",
+              "remote_file_path": "temp/03-NASA-O形环风险图表.jpg"
+            },
+            "url": "file://temp/03-NASA-O形环风险图表.jpg"
+          },
+          "is_continuation": false,
+          "parent_id": "bca3e2e221d4e9c0d402c748d508ee67f051c6047f5af71022828c455dbc6c86"
+        },
+        "page_number": 1,
+        "text": "Chart 2-1 presented by Thiokol's Roger Boisjoly summarizing primary concerns with the field joint and its O-ring seals on the boosters.",
+        "type": "NarrativeText"
+      },
+      {
+        "coordinates": [
+          0.511737,
+          0.898662,
+          0.988732,
+          0.898662,
+          0.988732,
+          0.98088,
+          0.511737,
+          0.98088
+        ],
+        "element_id": "1c121933dc591a02f6ab1d61448a2a997519b704e49f1a8c024b5afe2731763f",
+        "metadata": {
+          "category_depth": -1,
+          "data_source": {
+            "record_locator": {
+              "protocol": "file",
+              "remote_file_path": "temp/03-NASA-O形环风险图表.jpg"
+            },
+            "url": "file://temp/03-NASA-O形环风险图表.jpg"
+          },
+          "is_continuation": false,
+          "parent_id": "bca3e2e221d4e9c0d402c748d508ee67f051c6047f5af71022828c455dbc6c86"
+        },
+        "page_number": 1,
+        "text": "Boisjoly's Chart 2-2 indicating concern about temperature ef-fect on seal actuation time (handwritten).",
+        "type": "NarrativeText"
+      },
+      {
+        "coordinates": [
+          0.514554,
+          0.063098,
+          0.979343,
+          0.057361,
+          0.981221,
+          0.889101,
+          0.514554,
+          0.894837
+        ],
+        "element_id": "4d3dc53f47f5d27fdd7b6b95f7cf9add73753b5e1bf03049b3b2f6030af3e7a2",
+        "metadata": {
+          "category_depth": -1,
+          "data_source": {
+            "record_locator": {
+              "protocol": "file",
+              "remote_file_path": "temp/03-NASA-O形环风险图表.jpg"
+            },
+            "url": "file://temp/03-NASA-O形环风险图表.jpg"
+          },
+          "is_continuation": false,
+          "parent_id": "bca3e2e221d4e9c0d402c748d508ee67f051c6047f5af71022828c455dbc6c86"
+        },
+        "page_number": 1,
+        "sub_type": "bordered",
+        "table_structure": {
+          "cells": [
+            {
+              "cell_id": "bacbaf93a483980800a3e9d08fbed6f73253f3ae77189baed4278a62ed9aa357",
+              "col": 1,
+              "col_span": 1,
+              "content_type": "text",
+              "coordinates": [
+                0.522066,
+                0.057361,
+                0.977465,
+                0.055449,
+                0.978404,
+                0.868069,
+                0.523005,
+                0.869981
+              ],
+              "row": 1,
+              "row_span": 1,
+              "text": "Joint Primary ConcernsSRM 25■A Temperature Lower Than Current Data BaseResults in Changing Primary O-Ring Sealing TimingFunction■SRM 15A-80° ARC Black Grease BetweenO-RingsSRM 15B-110° ARC Black Grease BetweenO-Rings■Lower O-Ring squeeze due to lower temp.■Higher O-Ring shore hardness■Thicker grease viscosity■Higher O-Ring pressure actuation time■If actuation time increases,threshold of secondaryseal pressurization capability is approached■If threshold is reached then secondary seal may notbe capable of being pressurized"
+            }
+          ],
+          "cols": 1,
+          "rows": 1
+        },
+        "text": "\u003ctable border=\"1\" \u003e\u003ctr\u003e\n\u003ctd\u003eJoint Primary Concerns SRM 25 ■A Temperature Lower Than Current Data Base\u003cbr\u003eResults in Changing Primary O-Ring Sealing Timing\u003cbr\u003eFunction\u003cbr\u003e■SRM 15A-80° ARC Black Grease Between\u003cbr\u003eO-Rings\u003cbr\u003eSRM 15B-110° ARC Black Grease Between\u003cbr\u003eO-Rings\u003cbr\u003e■Lower O-Ring squeeze due to lower temp.\u003cbr\u003e■Higher O-Ring shore hardness\u003cbr\u003e■Thicker grease viscosity\u003cbr\u003e■Higher O-Ring pressure actuation time\u003cbr\u003e■If actuation time increases,threshold of secondary\u003cbr\u003eseal pressurization capability is approached\u003cbr\u003e■If threshold is reached then secondary seal may not\u003cbr\u003ebe capable of being pressurized\u003c/td\u003e\n\u003c/tr\u003e\u003c/table\u003e",
+        "type": "Table"
+      }
+    ],
+    "title_tree": [
+      {
+        "element_id": "4d915438337b4c8d4fbc8e95c5cb157a3108946724dcac6f84c1abfee0f1e353",
+        "level": 1,
+        "page_number": 1,
+        "title": "PRINARY CONCEPNS"
+      },
+      {
+        "element_id": "bca3e2e221d4e9c0d402c748d508ee67f051c6047f5af71022828c455dbc6c86",
+        "level": 1,
+        "page_number": 1,
+        "title": "。FIELD JOINT-HIGIEST CONCEPN"
+      }
+    ],
+    "pages": [
+      {
+        "angle": 0,
+        "element_ids": [
+          "4d915438337b4c8d4fbc8e95c5cb157a3108946724dcac6f84c1abfee0f1e353",
+          "bca3e2e221d4e9c0d402c748d508ee67f051c6047f5af71022828c455dbc6c86",
+          "2a1a457f88fe44375e8937f582e9e619754b3f7792bd3eab6d74e0b448e2d051",
+          "3fde6d285c2d71e41b887934489b2a05f2e7d688e65b9c1a0f3cea2552c86103",
+          "c1f2b38acc636242a1080cfb3f661cff3e1726c9ae01e6be3162808a252263f5",
+          "57a13d684bc7f0e956c8f57d01220d3e0b65867599417edf05a3d473c2964ba9",
+          "e9fa5f099b29425507ef04264b85bcfcd58a1cce994af749c254d1ab2ec966e3",
+          "e6539bf2d61f80cc1721d9123b9b081134098da5fbd2aa40bf7b65ce3b5b4c41",
+          "64ae04307e44e9d8de5f60fb688f38e8cce9d0e96a1a2c17d5d392669489b1c1",
+          "8ddcc4157c15b74d62553c0f62bd623bde7b47d096087df6e3f2ccc4937d61e9",
+          "6bd2b148ad4c364c0557f38fafa91335fa8ec2a581e7ed09a343391327620ae5",
+          "88022c47b7f67d19db70a490e6c8148d0abcf5474fc83700df5ac94001f32720",
+          "1c121933dc591a02f6ab1d61448a2a997519b704e49f1a8c024b5afe2731763f",
+          "4d3dc53f47f5d27fdd7b6b95f7cf9add73753b5e1bf03049b3b2f6030af3e7a2"
+        ],
+        "page_height": 523,
+        "page_image_url": "https://web-api.textin.com/ocr_image/external/94669e439e5476e7.jpg",
+        "page_number": 1,
+        "page_width": 1065,
+        "status": "Success"
+      }
+    ],
+    "summary": {
+      "duration_ms": 1689
+    }
+  }
+}
